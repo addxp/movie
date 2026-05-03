@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Bebas Neue', serif;
+  --font-body: 'Inter', sans-serif;
+  --color-bg: #0a0a0a;
+  --color-card: #141414;
+  --color-red: #e50914;
+  --color-muted: #555;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+
+body {
+  background: var(--color-bg);
+  color: #e5e5e5;
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+
+.hero-gradient {
+  background:
+    linear-gradient(to right, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.7) 45%, transparent 75%),
+    linear-gradient(to top, rgba(10,10,10,1) 0%, rgba(10,10,10,0.4) 25%, transparent 50%);
+}
+
+.movie-card {
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.movie-card:hover { transform: scale(1.05) translateY(-4px); z-index: 10; }
+
+.scroll-row { overflow-x: auto; scrollbar-width: none; scroll-behavior: smooth; }
+.scroll-row::-webkit-scrollbar { display: none; }
+
+.skeleton {
+  background: linear-gradient(90deg, #141414 25%, #1c1c1c 50%, #141414 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.input-glow:focus { outline: none; box-shadow: 0 0 0 1.5px var(--color-red); }
+
+.fade-left { background: linear-gradient(to right, var(--color-bg), transparent); }
+.fade-right { background: linear-gradient(to left, var(--color-bg), transparent); }
