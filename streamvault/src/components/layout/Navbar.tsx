@@ -68,6 +68,7 @@ export default function Navbar({ user }: NavbarProps) {
             <div className="hidden md:flex items-center gap-7">
               {navLink("/browse", "Início")}
               {navLink("/series", "Séries")}
+              {navLink("/animes", "Animes")}
               {navLink("/leitura", "Leitura")}
               {navLink("/favorites", "Favoritos")}
               {navLink("/collections", "Colecoes")}
@@ -140,6 +141,7 @@ export default function Navbar({ user }: NavbarProps) {
                 {[
                   { href: "/browse", label: "Início" },
                   { href: "/series", label: "Séries" },
+                  { href: "/animes", label: "Animes" },
                   { href: "/leitura", label: "Leitura" },
                   { href: "/favorites", label: "Favoritos" },
                   { href: "/collections", label: "Colecoes" },
