@@ -9,20 +9,22 @@ interface VideoPlayerProps {
   thumbnail?: string;
   movieId: string;
   userId: string;
-  duration?: number; // duração em minutos vinda do banco
+  duration?: number;
+  imdbId?: string; // ← novo: imdb_id vindo do banco ou do TMDB
 }
 
-export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userId, duration }: VideoPlayerProps) {
+type Source = "embed" | "proxy" | "superflix";
+
+export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userId, duration, imdbId }: VideoPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState(false);
-  const [source, setSource] = useState<"embed" | "superflix">("embed");
+  const [source, setSource] = useState<Source>("proxy"); // proxy como padrão
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const supabase = createClient();
 
-  // Duração total em segundos (usa a do banco se existir, senão assume 2h)
   const totalDuration = duration ? duration * 60 : 7200;
 
   const saveProgress = async (progress: number) => {
@@ -43,10 +45,7 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
   };
 
   const startTracking = () => {
-    // Salva imediatamente ao clicar em assistir
     saveProgress(0);
-
-    // Atualiza progresso a cada 30 segundos
     intervalRef.current = setInterval(() => {
       progressRef.current += 30;
       saveProgress(progressRef.current);
@@ -58,12 +57,13 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
     startTracking();
   };
 
-  // Limpa o intervalo ao sair da página
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
+
+  // ─── Helpers de URL ───────────────────────────────────────────────────────
 
   const getYouTubeEmbed = (url: string) => {
     const patterns = [/youtube\.com\/watch\?v=([^&]+)/, /youtu\.be\/([^?]+)/, /youtube\.com\/embed\/([^?]+)/];
@@ -79,26 +79,42 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
     return match ? "https://player.vimeo.com/video/" + match[1] + "?autoplay=1" : null;
   };
 
-  const getTmdbId = (url: string) => {
+  const getTmdbIdFromUrl = (url: string) => {
     const match = url.match(/embed\/([^/?]+)/);
     return match ? match[1] : null;
   };
 
   const isHLS = (url: string) => url.includes(".m3u8");
-  const isEmbedPlay = (url: string) => url.includes("embedplayapi.site");
+  const isEmbedPlay = (url: string) => url.includes("embedplayapi.site") || url.includes("embedplay");
 
   const embedSrc = getYouTubeEmbed(videoUrl) || getVimeoEmbed(videoUrl);
-  const tmdbId = getTmdbId(videoUrl);
+  const tmdbIdFromUrl = getTmdbIdFromUrl(videoUrl);
 
-  const getSrc = () => {
+  // Usa imdbId prop (do banco) ou extrai da URL
+  const resolvedImdbId = imdbId || tmdbIdFromUrl;
+
+  // URL do proxy reverso do EmbedPlay (variável de ambiente)
+  const PROXY_URL = process.env.NEXT_PUBLIC_PROXY_URL || "";
+
+  const getProxyUrl = () => {
+    if (!resolvedImdbId || !PROXY_URL) return null;
+    return `${PROXY_URL}/filme/${resolvedImdbId}`;
+  };
+
+  const getSrc = (): string => {
     if (embedSrc) return embedSrc;
-    if (isEmbedPlay(videoUrl) || tmdbId) {
-      if (source === "superflix" && tmdbId) {
-        return "https://superflixapi.online/filme/" + tmdbId;
-      }
-      return videoUrl;
+
+    switch (source) {
+      case "proxy":
+        return getProxyUrl() || videoUrl;
+      case "superflix":
+        return resolvedImdbId
+          ? `https://superflixapi.online/filme/${resolvedImdbId}`
+          : videoUrl;
+      case "embed":
+      default:
+        return videoUrl;
     }
-    return videoUrl;
   };
 
   const handleFullscreen = () => {
@@ -115,25 +131,22 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
 
   const openExternal = () => window.open(getSrc(), "_blank");
 
+  // ─── HLS ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!playing || !isHLS(videoUrl) || !videoRef.current) return;
     const video = videoRef.current;
-
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = videoUrl;
       video.play();
       return;
     }
-
     import("hls.js").then(({ default: Hls }) => {
       if (Hls.isSupported()) {
         const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
         const proxyUrl = "/api/proxy?url=" + encodeURIComponent(videoUrl);
         hls.loadSource(proxyUrl);
         hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          video.play().catch(() => setError(true));
-        });
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => setError(true)));
         hls.on(Hls.Events.ERROR, (_: unknown, data: { fatal: boolean }) => {
           if (data.fatal) setError(true);
         });
@@ -143,12 +156,13 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
     });
   }, [playing, videoUrl]);
 
+  // ─── Thumbnail / Play button ───────────────────────────────────────────────
   if (!playing) {
     return (
       <div
         className="relative w-full aspect-video bg-black rounded-xl overflow-hidden cursor-pointer group"
         onClick={handlePlay}
-        style={thumbnail ? { backgroundImage: "url(" + thumbnail + ")", backgroundSize: "cover", backgroundPosition: "center" } : {}}
+        style={thumbnail ? { backgroundImage: `url(${thumbnail})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
       >
         <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
         <div className="absolute inset-0 flex items-center justify-center">
@@ -164,13 +178,14 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
     );
   }
 
+  // ─── HLS player ───────────────────────────────────────────────────────────
   if (isHLS(videoUrl)) {
     return (
       <div ref={containerRef} className="relative w-full aspect-video bg-black rounded-xl overflow-hidden">
         {error ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-gray-400">
             <AlertCircle size={40} />
-            <p>Nao foi possivel carregar</p>
+            <p>Não foi possível carregar</p>
             <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="text-red-400 hover:underline text-sm">Abrir externamente</a>
           </div>
         ) : (
@@ -180,30 +195,61 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
     );
   }
 
+  // ─── Iframe player ────────────────────────────────────────────────────────
   const currentSrc = getSrc();
-  const hasSuperflix = (isEmbedPlay(videoUrl) || tmdbId) && !embedSrc;
+  const hasMultipleSources = (isEmbedPlay(videoUrl) || resolvedImdbId) && !embedSrc;
+  const proxyAvailable = !!getProxyUrl();
 
   return (
     <div className="space-y-3">
-      {hasSuperflix && (
-        <div className="flex items-center gap-2">
+      {/* Seletor de fonte */}
+      {hasMultipleSources && (
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[#555] text-xs">Fonte:</span>
+
+          {proxyAvailable && (
+            <button
+              onClick={() => setSource("proxy")}
+              className={`px-3 py-1 rounded text-xs font-medium transition-all ${
+                source === "proxy"
+                  ? "bg-[var(--color-red)] text-white"
+                  : "bg-white/5 text-[#555] hover:text-white"
+              }`}
+            >
+              EmbedPlay (sem anúncios)
+            </button>
+          )}
+
           <button
             onClick={() => setSource("embed")}
-            className={"px-3 py-1 rounded text-xs font-medium transition-all " + (source === "embed" ? "bg-[var(--color-red)] text-white" : "bg-white/5 text-[#555] hover:text-white")}
+            className={`px-3 py-1 rounded text-xs font-medium transition-all ${
+              source === "embed"
+                ? "bg-[var(--color-red)] text-white"
+                : "bg-white/5 text-[#555] hover:text-white"
+            }`}
           >
-            EmbedPlay
+            EmbedPlay (original)
           </button>
+
           <button
             onClick={() => setSource("superflix")}
-            className={"px-3 py-1 rounded text-xs font-medium transition-all " + (source === "superflix" ? "bg-[var(--color-red)] text-white" : "bg-white/5 text-[#555] hover:text-white")}
+            className={`px-3 py-1 rounded text-xs font-medium transition-all ${
+              source === "superflix"
+                ? "bg-[var(--color-red)] text-white"
+                : "bg-white/5 text-[#555] hover:text-white"
+            }`}
           >
             SuperFlix
           </button>
         </div>
       )}
 
-      <div ref={containerRef} className="relative w-full aspect-video bg-black rounded-xl overflow-hidden" style={{ isolation: "isolate" }}>
+      {/* Player */}
+      <div
+        ref={containerRef}
+        className="relative w-full aspect-video bg-black rounded-xl overflow-hidden"
+        style={{ isolation: "isolate" }}
+      >
         <iframe
           key={currentSrc + source}
           src={currentSrc}
@@ -215,7 +261,8 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
         />
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Controles */}
+      <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={handleFullscreen}
           className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-all border border-white/10"
@@ -228,9 +275,9 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
         >
           <ExternalLink size={12} /> Abrir em nova aba
         </button>
-        {hasSuperflix && (
+        {hasMultipleSources && (
           <span className="text-[#555] text-xs ml-auto">
-            Se um player nao funcionar, tente o outro
+            Se um player não funcionar, tente outro
           </span>
         )}
       </div>
