@@ -69,6 +69,7 @@ export default function Navbar({ user }: NavbarProps) {
               {navLink("/browse", "Início")}
               {navLink("/series", "Séries")}
               {navLink("/animes", "Animes")}
+              {navLink("/esportes", "Esportes")}
               {navLink("/leitura", "Leitura")}
               {navLink("/favorites", "Favoritos")}
               {navLink("/collections", "Colecoes")}
@@ -142,6 +143,7 @@ export default function Navbar({ user }: NavbarProps) {
                   { href: "/browse", label: "Início" },
                   { href: "/series", label: "Séries" },
                   { href: "/animes", label: "Animes" },
+                  { href: "/esportes", label: "Esportes" },
                   { href: "/leitura", label: "Leitura" },
                   { href: "/favorites", label: "Favoritos" },
                   { href: "/collections", label: "Colecoes" },
