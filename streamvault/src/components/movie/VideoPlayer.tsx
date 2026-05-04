@@ -207,18 +207,6 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[#555] text-xs">Fonte:</span>
 
-          {proxyAvailable && (
-            <button
-              onClick={() => setSource("proxy")}
-              className={`px-3 py-1 rounded text-xs font-medium transition-all ${
-                source === "proxy"
-                  ? "bg-[var(--color-red)] text-white"
-                  : "bg-white/5 text-[#555] hover:text-white"
-              }`}
-            >
-              EmbedPlay (sem anúncios)
-            </button>
-          )}
 
           <button
             onClick={() => setSource("embed")}
