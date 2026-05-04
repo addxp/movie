@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, Heart, LogOut, X, Menu, Home, Tv, Sword, Trophy, BookOpen, Star, FolderOpen, Radio, ShieldCheck, Download } from "lucide-react";
+import { Search, Heart, LogOut, X, Menu, Home, Tv, Sword, Trophy, BookOpen, Star, FolderOpen, Radio, ShieldCheck, Download, LayoutGrid, Monitor } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
@@ -21,8 +21,8 @@ const ALL_LINKS = [
   { href: "/admin",       label: "Admin",     Icon: ShieldCheck },
 ];
 
-// Início, Séries, Animes + Downloads (substituiu Favoritos)
 const BOTTOM_LINKS = ["/browse", "/series", "/animes", "/downloads"];
+const LAYOUT_KEY = "streamvault_layout";
 
 export default function Navbar({ user }: NavbarProps) {
   const router = useRouter();
@@ -32,6 +32,24 @@ export default function Navbar({ user }: NavbarProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // mobileLayout = true  → bottom nav + drawer (em qualquer tela)
+  // mobileLayout = false → navbar clássico do desktop
+  const [mobileLayout, setMobileLayout] = useState(false);
+  const [layoutReady, setLayoutReady] = useState(false);
+
+  // Lê preferência salva
+  useEffect(() => {
+    const saved = localStorage.getItem(LAYOUT_KEY);
+    setMobileLayout(saved !== "classic");
+    setLayoutReady(true);
+  }, []);
+
+  const toggleLayout = () => {
+    const next = !mobileLayout;
+    setMobileLayout(next);
+    localStorage.setItem(LAYOUT_KEY, next ? "mobile" : "classic");
+    setDrawerOpen(false);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -72,89 +90,131 @@ export default function Navbar({ user }: NavbarProps) {
     );
   };
 
+  if (!layoutReady) return null;
+
+  // ─────────────────────────────────────────────
+  // LAYOUT CLÁSSICO (desktop com navbar no topo)
+  // ─────────────────────────────────────────────
+  if (!mobileLayout) return (
+    <nav className={"fixed top-0 left-0 right-0 z-50 transition-all duration-500 " + (scrolled ? "bg-[var(--color-bg)]/95 backdrop-blur-xl border-b border-white/[0.04] shadow-2xl" : "bg-gradient-to-b from-black/70 to-transparent")}>
+      <div className="max-w-[1800px] mx-auto px-6 lg:px-10">
+        <div className="flex items-center justify-between h-16">
+
+          <Link href="/browse" className="flex items-center">
+            <span className="text-[28px] text-white tracking-wider" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.05em" }}>
+              STREAM<span style={{ color: "var(--color-red)" }}>VAULT</span>
+            </span>
+          </Link>
+
+          <div className="hidden md:flex items-center gap-7">
+            {navLink("/browse", "Início")}
+            {navLink("/series", "Séries")}
+            {navLink("/animes", "Animes")}
+            {navLink("/esportes", "Esportes")}
+            {navLink("/leitura", "Leitura")}
+            {navLink("/favorites", "Favoritos")}
+            {navLink("/collections", "Coleções")}
+            {navLink("/live", "Ao Vivo", <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />)}
+            {navLink("/downloads", "Downloads")}
+            {navLink("/admin", "Admin")}
+          </div>
+
+          <div className="hidden md:flex items-center gap-1">
+            {searchOpen ? (
+              <form onSubmit={handleSearch} className="flex items-center gap-2">
+                <input autoFocus type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar..."
+                  className="input-glow bg-white/[0.06] border border-white/10 rounded-lg px-4 py-1.5 text-white placeholder:text-[var(--color-muted)] text-sm w-52 transition-all" />
+                <button type="button" onClick={() => setSearchOpen(false)} className="text-[var(--color-muted)] hover:text-white p-1.5 transition-colors">
+                  <X size={15} />
+                </button>
+              </form>
+            ) : (
+              <button onClick={() => setSearchOpen(true)} className="text-[var(--color-muted)] hover:text-white p-2 rounded-lg hover:bg-white/5 transition-all">
+                <Search size={17} />
+              </button>
+            )}
+            <Link href="/favorites" className="text-[var(--color-muted)] hover:text-white p-2 rounded-lg hover:bg-white/5 transition-all">
+              <Heart size={17} />
+            </Link>
+            {/* Botão toggle para layout mobile */}
+            <button onClick={toggleLayout} title="Ativar layout mobile"
+              className="text-[var(--color-muted)] hover:text-white p-2 rounded-lg hover:bg-white/5 transition-all">
+              <LayoutGrid size={17} />
+            </button>
+            <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/10">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg" style={{ background: "var(--color-red)" }}>
+                {initials}
+              </div>
+              <button onClick={handleSignOut} className="text-[var(--color-muted)] hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-all" title="Sair">
+                <LogOut size={15} />
+              </button>
+            </div>
+          </div>
+
+          <button className="md:hidden text-white p-2" onClick={() => setSearchOpen((v) => !v)} aria-label="Buscar">
+            {searchOpen ? <X size={22} /> : <Search size={22} />}
+          </button>
+        </div>
+
+        {searchOpen && (
+          <div className="md:hidden pb-3">
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <input autoFocus type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar filmes..."
+                className="input-glow flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder:text-[var(--color-muted)] text-sm" />
+              <button type="submit" className="bg-[var(--color-red)] text-white px-4 rounded-lg">
+                <Search size={16} />
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+
+  // ─────────────────────────────────────────────
+  // LAYOUT MOBILE (bottom nav + drawer, em qualquer tela)
+  // ─────────────────────────────────────────────
   return (
     <>
-      {/* ── NAVBAR TOPO ── */}
+      {/* Navbar topo minimalista — só logo + busca */}
       <nav className={"fixed top-0 left-0 right-0 z-50 transition-all duration-500 " + (scrolled ? "bg-[var(--color-bg)]/95 backdrop-blur-xl border-b border-white/[0.04] shadow-2xl" : "bg-gradient-to-b from-black/70 to-transparent")}>
         <div className="max-w-[1800px] mx-auto px-6 lg:px-10">
           <div className="flex items-center justify-between h-16">
-
             <Link href="/browse" className="flex items-center">
-              <span className="text-[28px] text-white tracking-wider font-display" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.05em" }}>
+              <span className="text-[28px] text-white tracking-wider" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.05em" }}>
                 STREAM<span style={{ color: "var(--color-red)" }}>VAULT</span>
               </span>
             </Link>
-
-            <div className="hidden md:flex items-center gap-7">
-              {navLink("/browse", "Início")}
-              {navLink("/series", "Séries")}
-              {navLink("/animes", "Animes")}
-              {navLink("/esportes", "Esportes")}
-              {navLink("/leitura", "Leitura")}
-              {navLink("/favorites", "Favoritos")}
-              {navLink("/collections", "Coleções")}
-              {navLink("/live", "Ao Vivo", <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />)}
-              {navLink("/downloads", "Downloads")}
-              {navLink("/admin", "Admin")}
-            </div>
-
-            <div className="hidden md:flex items-center gap-1">
+            <div className="flex items-center gap-1">
               {searchOpen ? (
                 <form onSubmit={handleSearch} className="flex items-center gap-2">
                   <input autoFocus type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Buscar..."
                     className="input-glow bg-white/[0.06] border border-white/10 rounded-lg px-4 py-1.5 text-white placeholder:text-[var(--color-muted)] text-sm w-52 transition-all" />
-                  <button type="button" onClick={() => setSearchOpen(false)} className="text-[var(--color-muted)] hover:text-white p-1.5 transition-colors">
+                  <button type="button" onClick={() => setSearchOpen(false)} className="text-[var(--color-muted)] hover:text-white p-1.5">
                     <X size={15} />
                   </button>
                 </form>
               ) : (
-                <button onClick={() => setSearchOpen(true)} className="text-[var(--color-muted)] hover:text-white p-2 rounded-lg hover:bg-white/5 transition-all">
-                  <Search size={17} />
+                <button onClick={() => setSearchOpen(true)} className="text-white p-2">
+                  <Search size={20} />
                 </button>
               )}
-              <Link href="/favorites" className="text-[var(--color-muted)] hover:text-white p-2 rounded-lg hover:bg-white/5 transition-all">
-                <Heart size={17} />
-              </Link>
-              <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/10">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg" style={{ background: "var(--color-red)" }}>
-                  {initials}
-                </div>
-                <button onClick={handleSignOut} className="text-[var(--color-muted)] hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-all" title="Sair">
-                  <LogOut size={15} />
-                </button>
-              </div>
             </div>
-
-            {/* Botão busca mobile */}
-            <button className="md:hidden text-white p-2" onClick={() => setSearchOpen((v) => !v)} aria-label="Buscar">
-              {searchOpen ? <X size={22} /> : <Search size={22} />}
-            </button>
           </div>
-
-          {searchOpen && (
-            <div className="md:hidden pb-3">
-              <form onSubmit={handleSearch} className="flex gap-2">
-                <input autoFocus type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar filmes..."
-                  className="input-glow flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder:text-[var(--color-muted)] text-sm" />
-                <button type="submit" className="bg-[var(--color-red)] text-white px-4 rounded-lg">
-                  <Search size={16} />
-                </button>
-              </form>
-            </div>
-          )}
         </div>
       </nav>
 
-      {/* ── OVERLAY ── */}
+      {/* Overlay */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => setDrawerOpen(false)} />
+        <div className="fixed inset-0 z-40 bg-black/60" onClick={() => setDrawerOpen(false)} />
       )}
 
-      {/* ── DRAWER LATERAL ── */}
+      {/* Drawer lateral */}
       <aside
-        className={`fixed top-0 right-0 bottom-0 z-50 w-64 flex flex-col transition-transform duration-300 ease-in-out md:hidden ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed top-0 right-0 bottom-0 z-50 w-64 flex flex-col transition-transform duration-300 ease-in-out ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}
         style={{ background: "#111", borderLeft: "1px solid rgba(255,255,255,0.06)" }}
       >
         <div className="flex items-center justify-between h-16 px-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -180,7 +240,6 @@ export default function Navbar({ user }: NavbarProps) {
 
         <nav className="flex-1 py-2 overflow-y-auto">
           <p className="px-5 pt-3 pb-1 text-[10px] tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.25)" }}>Navegar</p>
-
           {ALL_LINKS.map(({ href, label, Icon, live }) => {
             const active = pathname === href;
             return (
@@ -197,6 +256,17 @@ export default function Navbar({ user }: NavbarProps) {
               </Link>
             );
           })}
+
+          <p className="px-5 pt-5 pb-1 text-[10px] tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.25)" }}>Preferências</p>
+          {/* Botão toggle para layout clássico */}
+          <button onClick={toggleLayout}
+            className="w-full flex items-center gap-3 px-5 py-3 text-sm transition-colors"
+            style={{ color: "rgba(255,255,255,0.6)" }}>
+            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
+              <Monitor size={14} />
+            </div>
+            Layout clássico (PC)
+          </button>
 
           <p className="px-5 pt-5 pb-1 text-[10px] tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.25)" }}>Conta</p>
           <button onClick={handleSignOut}
@@ -222,9 +292,9 @@ export default function Navbar({ user }: NavbarProps) {
         </div>
       </aside>
 
-      {/* ── BOTTOM NAV ── */}
+      {/* Bottom nav — aparece em todas as telas no layout mobile */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex items-center justify-around h-16 pb-1"
+        className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around h-16 pb-1"
         style={{ background: "rgba(13,13,13,0.98)", borderTop: "1px solid rgba(255,255,255,0.06)" }}
       >
         {ALL_LINKS.filter((l) => BOTTOM_LINKS.includes(l.href)).map(({ href, label, Icon }) => {
@@ -237,14 +307,13 @@ export default function Navbar({ user }: NavbarProps) {
             </Link>
           );
         })}
-
         <button onClick={() => setDrawerOpen(true)} className="flex flex-col items-center gap-1 flex-1 py-2">
           <Menu size={20} color="rgba(255,255,255,0.35)" />
           <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>Menu</span>
         </button>
       </nav>
 
-      <div className="md:hidden h-16" />
+      <div className="h-16" />
     </>
   );
 }
