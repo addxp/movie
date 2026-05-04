@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, Heart, LogOut, X, Menu, Home, Tv, Sword, Trophy, BookOpen, Star, FolderOpen, Radio, ShieldCheck } from "lucide-react";
+import { Search, Heart, LogOut, X, Menu, Home, Tv, Sword, Trophy, BookOpen, Star, FolderOpen, Radio, ShieldCheck, Download } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
@@ -17,11 +17,12 @@ const ALL_LINKS = [
   { href: "/favorites",   label: "Favoritos", Icon: Star },
   { href: "/collections", label: "Coleções",  Icon: FolderOpen },
   { href: "/live",        label: "Ao Vivo",   Icon: Radio, live: true },
+  { href: "/downloads",   label: "Downloads", Icon: Download },
   { href: "/admin",       label: "Admin",     Icon: ShieldCheck },
 ];
 
-// Links que aparecem no bottom nav (os 4 mais usados)
-const BOTTOM_LINKS = ["/browse", "/series", "/animes", "/favorites"];
+// Início, Séries, Animes + Downloads (substituiu Favoritos)
+const BOTTOM_LINKS = ["/browse", "/series", "/animes", "/downloads"];
 
 export default function Navbar({ user }: NavbarProps) {
   const router = useRouter();
@@ -78,14 +79,12 @@ export default function Navbar({ user }: NavbarProps) {
         <div className="max-w-[1800px] mx-auto px-6 lg:px-10">
           <div className="flex items-center justify-between h-16">
 
-            {/* Logo */}
             <Link href="/browse" className="flex items-center">
               <span className="text-[28px] text-white tracking-wider font-display" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.05em" }}>
                 STREAM<span style={{ color: "var(--color-red)" }}>VAULT</span>
               </span>
             </Link>
 
-            {/* Links desktop */}
             <div className="hidden md:flex items-center gap-7">
               {navLink("/browse", "Início")}
               {navLink("/series", "Séries")}
@@ -95,10 +94,10 @@ export default function Navbar({ user }: NavbarProps) {
               {navLink("/favorites", "Favoritos")}
               {navLink("/collections", "Coleções")}
               {navLink("/live", "Ao Vivo", <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />)}
+              {navLink("/downloads", "Downloads")}
               {navLink("/admin", "Admin")}
             </div>
 
-            {/* Ações desktop */}
             <div className="hidden md:flex items-center gap-1">
               {searchOpen ? (
                 <form onSubmit={handleSearch} className="flex items-center gap-2">
@@ -127,13 +126,12 @@ export default function Navbar({ user }: NavbarProps) {
               </div>
             </div>
 
-            {/* Botão busca — mobile */}
+            {/* Botão busca mobile */}
             <button className="md:hidden text-white p-2" onClick={() => setSearchOpen((v) => !v)} aria-label="Buscar">
               {searchOpen ? <X size={22} /> : <Search size={22} />}
             </button>
           </div>
 
-          {/* Barra de busca expansível — mobile */}
           {searchOpen && (
             <div className="md:hidden pb-3">
               <form onSubmit={handleSearch} className="flex gap-2">
@@ -155,10 +153,10 @@ export default function Navbar({ user }: NavbarProps) {
       )}
 
       {/* ── DRAWER LATERAL ── */}
-      <aside className={`fixed top-0 right-0 bottom-0 z-50 w-64 flex flex-col transition-transform duration-300 ease-in-out md:hidden ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}
-        style={{ background: "#111", borderLeft: "1px solid rgba(255,255,255,0.06)" }}>
-
-        {/* Header */}
+      <aside
+        className={`fixed top-0 right-0 bottom-0 z-50 w-64 flex flex-col transition-transform duration-300 ease-in-out md:hidden ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}
+        style={{ background: "#111", borderLeft: "1px solid rgba(255,255,255,0.06)" }}
+      >
         <div className="flex items-center justify-between h-16 px-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
           <span className="text-base text-white font-bold tracking-wider" style={{ fontFamily: "var(--font-display)" }}>
             STREAM<span style={{ color: "var(--color-red)" }}>VAULT</span>
@@ -168,7 +166,6 @@ export default function Navbar({ user }: NavbarProps) {
           </button>
         </div>
 
-        {/* Busca no drawer */}
         <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
           <form onSubmit={handleSearch} className="flex gap-2">
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
@@ -181,7 +178,6 @@ export default function Navbar({ user }: NavbarProps) {
           </form>
         </div>
 
-        {/* Links */}
         <nav className="flex-1 py-2 overflow-y-auto">
           <p className="px-5 pt-3 pb-1 text-[10px] tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.25)" }}>Navegar</p>
 
@@ -190,10 +186,10 @@ export default function Navbar({ user }: NavbarProps) {
             return (
               <Link key={href} href={href}
                 className="flex items-center gap-3 px-5 py-3 text-sm relative transition-colors"
-                style={{ color: active ? "#fff" : "rgba(255,255,255,0.6)", background: active ? "rgba(var(--color-red-rgb, 220,38,38),0.08)" : "transparent" }}>
+                style={{ color: active ? "#fff" : "rgba(255,255,255,0.6)", background: active ? "rgba(220,38,38,0.08)" : "transparent" }}>
                 {active && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r" style={{ background: "var(--color-red)" }} />}
                 <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-                  style={{ background: active ? "rgba(var(--color-red-rgb, 220,38,38),0.2)" : "rgba(255,255,255,0.06)" }}>
+                  style={{ background: active ? "rgba(220,38,38,0.2)" : "rgba(255,255,255,0.06)" }}>
                   <Icon size={14} />
                 </div>
                 <span className="flex-1">{label}</span>
@@ -213,7 +209,6 @@ export default function Navbar({ user }: NavbarProps) {
           </button>
         </nav>
 
-        {/* Rodapé usuário */}
         <div className="px-5 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: "var(--color-red)" }}>
@@ -228,9 +223,10 @@ export default function Navbar({ user }: NavbarProps) {
       </aside>
 
       {/* ── BOTTOM NAV ── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex items-center justify-around h-16 pb-1"
-        style={{ background: "rgba(13,13,13,0.98)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex items-center justify-around h-16 pb-1"
+        style={{ background: "rgba(13,13,13,0.98)", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+      >
         {ALL_LINKS.filter((l) => BOTTOM_LINKS.includes(l.href)).map(({ href, label, Icon }) => {
           const active = pathname === href;
           return (
@@ -242,14 +238,12 @@ export default function Navbar({ user }: NavbarProps) {
           );
         })}
 
-        {/* Botão que abre o drawer com todos os links */}
         <button onClick={() => setDrawerOpen(true)} className="flex flex-col items-center gap-1 flex-1 py-2">
           <Menu size={20} color="rgba(255,255,255,0.35)" />
           <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>Menu</span>
         </button>
       </nav>
 
-      {/* Espaço para o bottom nav não cobrir conteúdo */}
       <div className="md:hidden h-16" />
     </>
   );
