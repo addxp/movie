@@ -9,10 +9,23 @@ interface VideoPlayerProps {
   thumbnail?: string;
   movieId: string;
   userId: string;
-  duration?: number; // duração em minutos vinda do banco
+  duration?: number;
+  isSerie?: boolean; // ← novo prop para indicar se é série
+  season?: number;   // ← temporada
+  episode?: number;  // ← episódio
 }
 
-export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userId, duration }: VideoPlayerProps) {
+export default function VideoPlayer({
+  videoUrl,
+  title,
+  thumbnail,
+  movieId,
+  userId,
+  duration,
+  isSerie = false,
+  season = 1,
+  episode = 1,
+}: VideoPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState(false);
   const [source, setSource] = useState<"embed" | "superflix">("embed");
@@ -22,7 +35,6 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const supabase = createClient();
 
-  // Duração total em segundos (usa a do banco se existir, senão assume 2h)
   const totalDuration = duration ? duration * 60 : 7200;
 
   const saveProgress = async (progress: number) => {
@@ -43,10 +55,7 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
   };
 
   const startTracking = () => {
-    // Salva imediatamente ao clicar em assistir
     saveProgress(0);
-
-    // Atualiza progresso a cada 30 segundos
     intervalRef.current = setInterval(() => {
       progressRef.current += 30;
       saveProgress(progressRef.current);
@@ -58,7 +67,6 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
     startTracking();
   };
 
-  // Limpa o intervalo ao sair da página
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -66,7 +74,11 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
   }, []);
 
   const getYouTubeEmbed = (url: string) => {
-    const patterns = [/youtube\.com\/watch\?v=([^&]+)/, /youtu\.be\/([^?]+)/, /youtube\.com\/embed\/([^?]+)/];
+    const patterns = [
+      /youtube\.com\/watch\?v=([^&]+)/,
+      /youtu\.be\/([^?]+)/,
+      /youtube\.com\/embed\/([^?]+)/,
+    ];
     for (const p of patterns) {
       const match = url.match(p);
       if (match) return "https://www.youtube.com/embed/" + match[1] + "?autoplay=1&rel=0";
@@ -79,9 +91,16 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
     return match ? "https://player.vimeo.com/video/" + match[1] + "?autoplay=1" : null;
   };
 
+  // Extrai o ID de /embed/ID
   const getTmdbId = (url: string) => {
-    const match = url.match(/embed\/([^/?]+)/);
-    return match ? match[1] : null;
+    const embedMatch = url.match(/embed\/([^/?]+)/);
+    if (embedMatch) return embedMatch[1];
+
+    // fallback: /serie/ID ou /tv/ID
+    const serieMatch = url.match(/(?:serie|tv)\/([^/?]+)/);
+    if (serieMatch) return serieMatch[1];
+
+    return null;
   };
 
   const isHLS = (url: string) => url.includes(".m3u8");
@@ -92,12 +111,19 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
 
   const getSrc = () => {
     if (embedSrc) return embedSrc;
+
     if (isEmbedPlay(videoUrl) || tmdbId) {
       if (source === "superflix" && tmdbId) {
-        return "https://superflixapi.online/filme/" + tmdbId;
+        if (isSerie) {
+          // Séries: https://superflixapi.online/serie/ID/TEMPORADA/EPISODIO
+          return `https://superflixapi.online/serie/${tmdbId}/${season}/${episode}`;
+        }
+        // Filmes: https://superflixapi.online/filme/ID
+        return `https://superflixapi.online/filme/${tmdbId}`;
       }
       return videoUrl;
     }
+
     return videoUrl;
   };
 
@@ -105,11 +131,17 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
     const iframe = containerRef.current?.querySelector("iframe");
     if (iframe) {
       if (iframe.requestFullscreen) iframe.requestFullscreen();
-      else if ((iframe as HTMLIFrameElement & { webkitRequestFullscreen?: () => void }).webkitRequestFullscreen) {
-        (iframe as HTMLIFrameElement & { webkitRequestFullscreen?: () => void }).webkitRequestFullscreen?.();
+      else if (
+        (iframe as HTMLIFrameElement & { webkitRequestFullscreen?: () => void })
+          .webkitRequestFullscreen
+      ) {
+        (
+          iframe as HTMLIFrameElement & { webkitRequestFullscreen?: () => void }
+        ).webkitRequestFullscreen?.();
       }
     } else if (containerRef.current) {
-      if (containerRef.current.requestFullscreen) containerRef.current.requestFullscreen();
+      if (containerRef.current.requestFullscreen)
+        containerRef.current.requestFullscreen();
     }
   };
 
@@ -148,7 +180,15 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
       <div
         className="relative w-full aspect-video bg-black rounded-xl overflow-hidden cursor-pointer group"
         onClick={handlePlay}
-        style={thumbnail ? { backgroundImage: "url(" + thumbnail + ")", backgroundSize: "cover", backgroundPosition: "center" } : {}}
+        style={
+          thumbnail
+            ? {
+                backgroundImage: "url(" + thumbnail + ")",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : {}
+        }
       >
         <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
         <div className="absolute inset-0 flex items-center justify-center">
@@ -166,15 +206,31 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
 
   if (isHLS(videoUrl)) {
     return (
-      <div ref={containerRef} className="relative w-full aspect-video bg-black rounded-xl overflow-hidden">
+      <div
+        ref={containerRef}
+        className="relative w-full aspect-video bg-black rounded-xl overflow-hidden"
+      >
         {error ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-gray-400">
             <AlertCircle size={40} />
-            <p>Nao foi possivel carregar</p>
-            <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="text-red-400 hover:underline text-sm">Abrir externamente</a>
+            <p>Não foi possível carregar</p>
+            <a
+              href={videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-red-400 hover:underline text-sm"
+            >
+              Abrir externamente
+            </a>
           </div>
         ) : (
-          <video ref={videoRef} controls autoPlay className="w-full h-full" onError={() => setError(true)} />
+          <video
+            ref={videoRef}
+            controls
+            autoPlay
+            className="w-full h-full"
+            onError={() => setError(true)}
+          />
         )}
       </div>
     );
@@ -190,27 +246,47 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
           <span className="text-[#555] text-xs">Fonte:</span>
           <button
             onClick={() => setSource("embed")}
-            className={"px-3 py-1 rounded text-xs font-medium transition-all " + (source === "embed" ? "bg-[var(--color-red)] text-white" : "bg-white/5 text-[#555] hover:text-white")}
+            className={
+              "px-3 py-1 rounded text-xs font-medium transition-all " +
+              (source === "embed"
+                ? "bg-[var(--color-red)] text-white"
+                : "bg-white/5 text-[#555] hover:text-white")
+            }
           >
             EmbedPlay
           </button>
           <button
             onClick={() => setSource("superflix")}
-            className={"px-3 py-1 rounded text-xs font-medium transition-all " + (source === "superflix" ? "bg-[var(--color-red)] text-white" : "bg-white/5 text-[#555] hover:text-white")}
+            className={
+              "px-3 py-1 rounded text-xs font-medium transition-all " +
+              (source === "superflix"
+                ? "bg-[var(--color-red)] text-white"
+                : "bg-white/5 text-[#555] hover:text-white")
+            }
           >
             SuperFlix
           </button>
         </div>
       )}
 
-      <div ref={containerRef} className="relative w-full aspect-video bg-black rounded-xl overflow-hidden" style={{ isolation: "isolate" }}>
+      <div
+        ref={containerRef}
+        className="relative w-full aspect-video bg-black rounded-xl overflow-hidden"
+        style={{ isolation: "isolate" }}
+      >
         <iframe
           key={currentSrc + source}
           src={currentSrc}
           title={title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
           allowFullScreen
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            border: "none",
+          }}
           referrerPolicy="no-referrer-when-downgrade"
         />
       </div>
@@ -230,7 +306,7 @@ export default function VideoPlayer({ videoUrl, title, thumbnail, movieId, userI
         </button>
         {hasSuperflix && (
           <span className="text-[#555] text-xs ml-auto">
-            Se um player nao funcionar, tente o outro
+            Se um player não funcionar, tente o outro
           </span>
         )}
       </div>
