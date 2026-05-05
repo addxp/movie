@@ -10,9 +10,6 @@ interface VideoPlayerProps {
   movieId: string;
   userId: string;
   duration?: number;
-  isSerie?: boolean; // ← novo prop para indicar se é série
-  season?: number;   // ← temporada
-  episode?: number;  // ← episódio
 }
 
 export default function VideoPlayer({
@@ -22,9 +19,6 @@ export default function VideoPlayer({
   movieId,
   userId,
   duration,
-  isSerie = false,
-  season = 1,
-  episode = 1,
 }: VideoPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState(false);
@@ -91,20 +85,21 @@ export default function VideoPlayer({
     return match ? "https://player.vimeo.com/video/" + match[1] + "?autoplay=1" : null;
   };
 
-  // Extrai o ID de /embed/ID
   const getTmdbId = (url: string) => {
-    const embedMatch = url.match(/embed\/([^/?]+)/);
-    if (embedMatch) return embedMatch[1];
-
-    // fallback: /serie/ID ou /tv/ID
-    const serieMatch = url.match(/(?:serie|tv)\/([^/?]+)/);
-    if (serieMatch) return serieMatch[1];
-
-    return null;
+    // Captura o ID após /embed/, /filme/ ou /serie/
+    const match = url.match(/(?:embed|filme|serie)\/([^/?]+)/);
+    return match ? match[1] : null;
   };
 
   const isHLS = (url: string) => url.includes(".m3u8");
-  const isEmbedPlay = (url: string) => url.includes("embedplayapi.site");
+
+  // ✅ Reconhece ambos os domínios do EmbedPlay
+  const isEmbedPlay = (url: string) =>
+    url.includes("embedplayapi.site") || url.includes("embedplay.one");
+
+  // Detecta se a URL é de série
+  const isSerieUrl = (url: string) =>
+    url.includes("/serie/") || url.includes("/tv/");
 
   const embedSrc = getYouTubeEmbed(videoUrl) || getVimeoEmbed(videoUrl);
   const tmdbId = getTmdbId(videoUrl);
@@ -114,13 +109,12 @@ export default function VideoPlayer({
 
     if (isEmbedPlay(videoUrl) || tmdbId) {
       if (source === "superflix" && tmdbId) {
-        if (isSerie) {
-          // Séries: https://superflixapi.online/serie/ID/TEMPORADA/EPISODIO
-          return `https://superflixapi.online/serie/${tmdbId}/${season}/${episode}`;
+        if (isSerieUrl(videoUrl)) {
+          return `https://superflixapi.online/serie/${tmdbId}`;
         }
-        // Filmes: https://superflixapi.online/filme/ID
         return `https://superflixapi.online/filme/${tmdbId}`;
       }
+      // Fonte embed: usa a URL diretamente (já está no formato correto)
       return videoUrl;
     }
 
@@ -237,7 +231,7 @@ export default function VideoPlayer({
   }
 
   const currentSrc = getSrc();
-  const hasSuperflix = (isEmbedPlay(videoUrl) || tmdbId) && !embedSrc;
+  const hasSuperflix = (isEmbedPlay(videoUrl) || !!tmdbId) && !embedSrc;
 
   return (
     <div className="space-y-3">
