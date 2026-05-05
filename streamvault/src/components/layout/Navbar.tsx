@@ -2,10 +2,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, Heart, LogOut, X, Menu, Home, Tv, Sword, Trophy, BookOpen, Star, FolderOpen, Radio, ShieldCheck, Download, LayoutGrid, Monitor } from "lucide-react";
+import { Search, Heart, LogOut, X, Menu, Home, Tv, Sword, Trophy, BookOpen, Star, FolderOpen, Radio, ShieldCheck, Download, LayoutGrid, Monitor, MessageSquarePlus } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { ..., Trophy, MessageSquarePlus } from "lucide-react";
+
 
 interface NavbarProps { user: User; }
 
