@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Link from "next/link";
 import { Play } from "lucide-react";
+import HowToWatchModal from "@/components/ui/HowToWatchModal";
 
 export default async function SeriesPage() {
   const supabase = await createClient();
@@ -25,6 +26,7 @@ export default async function SeriesPage() {
           <h1 className="text-3xl font-bold text-white" style={{ fontFamily: "var(--font-display)" }}>
             SÉRIES
           </h1>
+          <HowToWatchModal />
         </div>
 
         {!series || series.length === 0 ? (

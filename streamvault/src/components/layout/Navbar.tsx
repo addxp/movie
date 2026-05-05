@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Search, Heart, LogOut, X, Menu, Home, Tv, Sword, Trophy, BookOpen, Star, FolderOpen, Radio, ShieldCheck, Download, LayoutGrid, Monitor } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
+import { ..., Trophy, MessageSquarePlus } from "lucide-react";
 
 interface NavbarProps { user: User; }
 
@@ -13,6 +14,8 @@ const ALL_LINKS = [
   { href: "/series",      label: "Séries",    Icon: Tv },
   { href: "/animes",      label: "Animes",    Icon: Sword },
   { href: "/esportes",    label: "Esportes",  Icon: Trophy },
+  { href: "/top", label: "Top 10", Icon: Trophy },
+{ href: "/requests", label: "Pedidos", Icon: MessageSquarePlus },
   { href: "/leitura",     label: "Leitura",   Icon: BookOpen },
   { href: "/favorites",   label: "Favoritos", Icon: Star },
   { href: "/collections", label: "Coleções",  Icon: FolderOpen },
