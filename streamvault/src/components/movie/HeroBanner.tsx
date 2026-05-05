@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Play, Info, Heart, Volume2, VolumeX } from "lucide-react";
+import { Play, Info, Heart } from "lucide-react";
 import type { Movie } from "@/types";
 import { useFavorites } from "@/hooks/useFavorites";
 
@@ -12,7 +12,6 @@ export default function HeroBanner({ movie, userId }: HeroBannerProps) {
   const [imgError, setImgError] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
-  const [muted, setMuted] = useState(true);
   const sectionRef = useRef<HTMLElement>(null);
 
   const bgImage = !imgError ? (movie.backdrop || movie.thumbnail) : null;
@@ -274,28 +273,6 @@ export default function HeroBanner({ movie, userId }: HeroBannerProps) {
           </div>
         </div>
       </div>
-
-      {/* ── Sound toggle (decorative) ── */}
-      <button
-        onClick={() => setMuted(m => !m)}
-        className="absolute bottom-28 right-8 lg:right-16"
-        style={{
-          width: "38px",
-          height: "38px",
-          borderRadius: "50%",
-          background: "rgba(255,255,255,0.06)",
-          backdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          color: "rgba(255,255,255,0.6)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          transition: "all 0.2s",
-        }}
-      >
-        {muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
-      </button>
 
       {/* ── Progress bar decoration ── */}
       <div className="absolute bottom-0 left-0 right-0" style={{ height: "2px" }}>
