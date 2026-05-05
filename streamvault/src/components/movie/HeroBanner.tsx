@@ -14,7 +14,8 @@ export default function HeroBanner({ movie, userId }: HeroBannerProps) {
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
   const sectionRef = useRef<HTMLElement>(null);
 
-  const bgImage = !imgError ? (movie.backdrop || movie.thumbnail) : null;
+  const bgSrc = movie.backdrop || movie.thumbnail;
+  const bgImage = !imgError && bgSrc ? bgSrc : null;
 
   // Subtle parallax on mouse move
   useEffect(() => {
@@ -53,10 +54,10 @@ export default function HeroBanner({ movie, userId }: HeroBannerProps) {
             src={bgImage}
             alt={movie.title}
             onLoad={() => setLoaded(true)}
-            onError={() => setImgError(true)}
+            onError={() => { setImgError(false); setLoaded(true); }}
             className="w-full h-full object-cover"
             style={{
-              opacity: loaded ? 1 : 0,
+              opacity: 1,
               transition: "opacity 1.2s ease",
             }}
           />
