@@ -2,10 +2,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, Heart, LogOut, X, Menu, Home, Tv, Sword, Trophy, BookOpen, Star, FolderOpen, Radio, ShieldCheck, Download, LayoutGrid, Monitor, MessageSquarePlus } from "lucide-react";
+import {
+  Search, Heart, LogOut, X, Menu, Home, Tv, Sword, Trophy,
+  BookOpen, Star, FolderOpen, Radio, ShieldCheck, Download,
+  LayoutGrid, Monitor, MessageSquarePlus
+} from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-
 
 interface NavbarProps { user: User; }
 
@@ -14,8 +17,8 @@ const ALL_LINKS = [
   { href: "/series",      label: "Séries",    Icon: Tv },
   { href: "/animes",      label: "Animes",    Icon: Sword },
   { href: "/esportes",    label: "Esportes",  Icon: Trophy },
-  { href: "/top", label: "Top 10", Icon: Trophy },
-{ href: "/requests", label: "Pedidos", Icon: MessageSquarePlus },
+  { href: "/top",         label: "Top 10",    Icon: Trophy },
+  { href: "/requests",    label: "Pedidos",   Icon: MessageSquarePlus },
   { href: "/leitura",     label: "Leitura",   Icon: BookOpen },
   { href: "/favorites",   label: "Favoritos", Icon: Star },
   { href: "/collections", label: "Coleções",  Icon: FolderOpen },
@@ -27,6 +30,19 @@ const ALL_LINKS = [
 const BOTTOM_LINKS = ["/browse", "/series", "/animes", "/downloads"];
 const LAYOUT_KEY = "streamvault_layout";
 
+function Logo({ size = "sm" }: { size?: "sm" | "md" }) {
+  const cls = size === "sm"
+    ? "text-[18px] tracking-[0.06em]"
+    : "text-[20px] tracking-[0.06em]";
+  return (
+    <Link href="/browse" className="flex items-center select-none">
+      <span className={`text-white font-bold ${cls}`} style={{ fontFamily: "var(--font-display)" }}>
+        STREAM<span style={{ color: "var(--color-red)" }}>VAULT</span>
+      </span>
+    </Link>
+  );
+}
+
 export default function Navbar({ user }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -35,12 +51,9 @@ export default function Navbar({ user }: NavbarProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  // mobileLayout = true  → bottom nav + drawer (em qualquer tela)
-  // mobileLayout = false → navbar clássico do desktop
   const [mobileLayout, setMobileLayout] = useState(false);
   const [layoutReady, setLayoutReady] = useState(false);
 
-  // Lê preferência salva
   useEffect(() => {
     const saved = localStorage.getItem(LAYOUT_KEY);
     setMobileLayout(saved !== "classic");
@@ -55,7 +68,7 @@ export default function Navbar({ user }: NavbarProps) {
   };
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -84,90 +97,111 @@ export default function Navbar({ user }: NavbarProps) {
 
   const initials = (user.user_metadata?.full_name || user.email || "U")[0].toUpperCase();
 
-  const navLink = (href: string, label: string, extra?: React.ReactNode) => {
-    const active = pathname === href;
-    return (
-      <Link href={href} className={"flex items-center gap-1.5 text-sm transition-all duration-200 " + (active ? "text-white font-medium" : "text-[var(--color-muted)] hover:text-white")}>
-        {extra}{label}
-      </Link>
-    );
-  };
-
   if (!layoutReady) return null;
 
-  // ─────────────────────────────────────────────
-  // LAYOUT CLÁSSICO (desktop com navbar no topo)
-  // ─────────────────────────────────────────────
+  // ─── CLASSIC DESKTOP LAYOUT ──────────────────────────────────
   if (!mobileLayout) return (
-    <nav className={"fixed top-0 left-0 right-0 z-50 transition-all duration-500 " + (scrolled ? "bg-[var(--color-bg)]/95 backdrop-blur-xl border-b border-white/[0.04] shadow-2xl" : "bg-gradient-to-b from-black/70 to-transparent")}>
-      <div className="max-w-[1800px] mx-auto px-6 lg:px-10">
-        <div className="flex items-center justify-between h-16">
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      scrolled
+        ? "bg-[var(--color-bg)]/96 backdrop-blur-2xl border-b border-white/[0.04] shadow-[0_1px_40px_rgba(0,0,0,0.6)]"
+        : "bg-gradient-to-b from-black/60 to-transparent"
+    }`}>
+      <div className="max-w-[1800px] mx-auto px-6 lg:px-12">
+        <div className="flex items-center justify-between h-12">
 
-          <Link href="/browse" className="flex items-center">
-            <span className="text-[28px] text-white tracking-wider" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.05em" }}>
-              STREAM<span style={{ color: "var(--color-red)" }}>VAULT</span>
-            </span>
-          </Link>
+          <Logo size="sm" />
 
-          <div className="hidden md:flex items-center gap-7">
-            {navLink("/browse", "Início")}
-            {navLink("/series", "Séries")}
-            {navLink("/animes", "Animes")}
-            {navLink("/esportes", "Esportes")}
-            {navLink("/leitura", "Leitura")}
-            {navLink("/favorites", "Favoritos")}
-            {navLink("/collections", "Coleções")}
-            {navLink("/live", "Ao Vivo", <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />)}
-            {navLink("/downloads", "Downloads")}
-            {navLink("/admin", "Admin")}
+          {/* Nav links */}
+          <div className="hidden md:flex items-center gap-6">
+            {ALL_LINKS.filter(l => !["/admin", "/requests"].includes(l.href)).slice(0, 9).map(({ href, label, live }) => {
+              const active = pathname === href;
+              return (
+                <Link key={href} href={href}
+                  className={`relative text-[12px] font-medium tracking-wide transition-colors duration-200 flex items-center gap-1.5 ${
+                    active ? "text-white" : "text-[var(--color-muted)] hover:text-white/80"
+                  }`}
+                >
+                  {live && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
+                  {label}
+                  {active && (
+                    <span className="absolute -bottom-[13px] left-0 right-0 h-[1.5px] rounded-full bg-[var(--color-red)]" />
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
-          <div className="hidden md:flex items-center gap-1">
+          {/* Right controls */}
+          <div className="hidden md:flex items-center gap-0.5">
             {searchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center gap-2">
-                <input autoFocus type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              <form onSubmit={handleSearch} className="flex items-center gap-2 mr-1">
+                <input
+                  autoFocus
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar..."
-                  className="input-glow bg-white/[0.06] border border-white/10 rounded-lg px-4 py-1.5 text-white placeholder:text-[var(--color-muted)] text-sm w-52 transition-all" />
-                <button type="button" onClick={() => setSearchOpen(false)} className="text-[var(--color-muted)] hover:text-white p-1.5 transition-colors">
-                  <X size={15} />
+                  className="input-glow bg-white/[0.05] border border-white/10 rounded-md px-3 py-1.5 text-white placeholder:text-[var(--color-muted)] text-[12px] w-48 transition-all"
+                />
+                <button type="button" onClick={() => setSearchOpen(false)}
+                  className="text-[var(--color-muted)] hover:text-white p-1 transition-colors">
+                  <X size={14} />
                 </button>
               </form>
             ) : (
-              <button onClick={() => setSearchOpen(true)} className="text-[var(--color-muted)] hover:text-white p-2 rounded-lg hover:bg-white/5 transition-all">
-                <Search size={17} />
+              <button onClick={() => setSearchOpen(true)}
+                className="text-[var(--color-muted)] hover:text-white p-2 rounded-md hover:bg-white/[0.04] transition-all">
+                <Search size={15} />
               </button>
             )}
-            <Link href="/favorites" className="text-[var(--color-muted)] hover:text-white p-2 rounded-lg hover:bg-white/5 transition-all">
-              <Heart size={17} />
+
+            <Link href="/favorites"
+              className="text-[var(--color-muted)] hover:text-white p-2 rounded-md hover:bg-white/[0.04] transition-all">
+              <Heart size={15} />
             </Link>
-            {/* Botão toggle para layout mobile */}
-            <button onClick={toggleLayout} title="Ativar layout mobile"
-              className="text-[var(--color-muted)] hover:text-white p-2 rounded-lg hover:bg-white/5 transition-all">
-              <LayoutGrid size={17} />
+
+            <button onClick={toggleLayout} title="Layout mobile"
+              className="text-[var(--color-muted)] hover:text-white p-2 rounded-md hover:bg-white/[0.04] transition-all">
+              <LayoutGrid size={15} />
             </button>
-            <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/10">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg" style={{ background: "var(--color-red)" }}>
+
+            {/* User */}
+            <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/[0.07]">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold"
+                style={{ background: "var(--color-red)" }}
+              >
                 {initials}
               </div>
-              <button onClick={handleSignOut} className="text-[var(--color-muted)] hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-all" title="Sair">
-                <LogOut size={15} />
+              <button onClick={handleSignOut}
+                className="text-[var(--color-muted)] hover:text-white p-1.5 rounded-md hover:bg-white/[0.04] transition-all"
+                title="Sair">
+                <LogOut size={13} />
               </button>
             </div>
           </div>
 
-          <button className="md:hidden text-white p-2" onClick={() => setSearchOpen((v) => !v)} aria-label="Buscar">
-            {searchOpen ? <X size={22} /> : <Search size={22} />}
+          {/* Mobile search toggle */}
+          <button className="md:hidden text-white p-2" onClick={() => setSearchOpen(v => !v)}>
+            {searchOpen ? <X size={20} /> : <Search size={20} />}
           </button>
         </div>
 
         {searchOpen && (
           <div className="md:hidden pb-3">
             <form onSubmit={handleSearch} className="flex gap-2">
-              <input autoFocus type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              <input
+                autoFocus
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar filmes..."
-                className="input-glow flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder:text-[var(--color-muted)] text-sm" />
-              <button type="submit" className="bg-[var(--color-red)] text-white px-4 rounded-lg">
-                <Search size={16} />
+                className="input-glow flex-1 bg-white/[0.05] border border-white/10 rounded-md px-3 py-2 text-white placeholder:text-[var(--color-muted)] text-sm"
+              />
+              <button type="submit"
+                className="px-3 rounded-md text-white text-sm"
+                style={{ background: "var(--color-red)" }}>
+                <Search size={15} />
               </button>
             </form>
           </div>
@@ -176,33 +210,37 @@ export default function Navbar({ user }: NavbarProps) {
     </nav>
   );
 
-  // ─────────────────────────────────────────────
-  // LAYOUT MOBILE (bottom nav + drawer, em qualquer tela)
-  // ─────────────────────────────────────────────
+  // ─── MOBILE LAYOUT (bottom nav + drawer) ────────────────────
   return (
     <>
-      {/* Navbar topo minimalista — só logo + busca */}
-      <nav className={"fixed top-0 left-0 right-0 z-50 transition-all duration-500 " + (scrolled ? "bg-[var(--color-bg)]/95 backdrop-blur-xl border-b border-white/[0.04] shadow-2xl" : "bg-gradient-to-b from-black/70 to-transparent")}>
-        <div className="max-w-[1800px] mx-auto px-6 lg:px-10">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/browse" className="flex items-center">
-              <span className="text-[28px] text-white tracking-wider" style={{ fontFamily: "var(--font-display)", letterSpacing: "0.05em" }}>
-                STREAM<span style={{ color: "var(--color-red)" }}>VAULT</span>
-              </span>
-            </Link>
+      {/* Top bar — logo + search only */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? "bg-[var(--color-bg)]/96 backdrop-blur-2xl border-b border-white/[0.04]"
+          : "bg-gradient-to-b from-black/60 to-transparent"
+      }`}>
+        <div className="max-w-[1800px] mx-auto px-5">
+          <div className="flex items-center justify-between h-12">
+            <Logo size="sm" />
             <div className="flex items-center gap-1">
               {searchOpen ? (
                 <form onSubmit={handleSearch} className="flex items-center gap-2">
-                  <input autoFocus type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                  <input
+                    autoFocus
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Buscar..."
-                    className="input-glow bg-white/[0.06] border border-white/10 rounded-lg px-4 py-1.5 text-white placeholder:text-[var(--color-muted)] text-sm w-52 transition-all" />
-                  <button type="button" onClick={() => setSearchOpen(false)} className="text-[var(--color-muted)] hover:text-white p-1.5">
-                    <X size={15} />
+                    className="input-glow bg-white/[0.06] border border-white/10 rounded-md px-3 py-1.5 text-white placeholder:text-[var(--color-muted)] text-sm w-48"
+                  />
+                  <button type="button" onClick={() => setSearchOpen(false)}
+                    className="text-[var(--color-muted)] hover:text-white p-1">
+                    <X size={14} />
                   </button>
                 </form>
               ) : (
                 <button onClick={() => setSearchOpen(true)} className="text-white p-2">
-                  <Search size={20} />
+                  <Search size={18} />
                 </button>
               )}
             </div>
@@ -212,111 +250,147 @@ export default function Navbar({ user }: NavbarProps) {
 
       {/* Overlay */}
       {drawerOpen && (
-        <div className="fixed inset-0 z-40 bg-black/60" onClick={() => setDrawerOpen(false)} />
+        <div
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
+          onClick={() => setDrawerOpen(false)}
+        />
       )}
 
-      {/* Drawer lateral */}
+      {/* Side drawer */}
       <aside
-        className={`fixed top-0 right-0 bottom-0 z-50 w-64 flex flex-col transition-transform duration-300 ease-in-out ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}
-        style={{ background: "#111", borderLeft: "1px solid rgba(255,255,255,0.06)" }}
+        className={`fixed top-0 right-0 bottom-0 z-50 w-60 flex flex-col transition-transform duration-300 ease-in-out ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}
+        style={{ background: "#0e0e0e", borderLeft: "1px solid rgba(255,255,255,0.05)" }}
       >
-        <div className="flex items-center justify-between h-16 px-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <span className="text-base text-white font-bold tracking-wider" style={{ fontFamily: "var(--font-display)" }}>
-            STREAM<span style={{ color: "var(--color-red)" }}>VAULT</span>
-          </span>
-          <button onClick={() => setDrawerOpen(false)} className="text-white/40 hover:text-white p-1">
-            <X size={20} />
+        {/* Drawer header */}
+        <div className="flex items-center justify-between h-12 px-4"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+          <Logo size="sm" />
+          <button onClick={() => setDrawerOpen(false)}
+            className="text-white/30 hover:text-white/70 p-1 transition-colors">
+            <X size={17} />
           </button>
         </div>
 
+        {/* Drawer search */}
         <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
           <form onSubmit={handleSearch} className="flex gap-2">
-            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar..."
-              className="flex-1 rounded-lg px-3 py-2 text-white text-sm"
-              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }} />
-            <button type="submit" className="px-3 rounded-lg text-white" style={{ background: "var(--color-red)" }}>
-              <Search size={14} />
+              className="flex-1 rounded-md px-3 py-2 text-white text-[13px] outline-none"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
+            />
+            <button type="submit"
+              className="px-3 rounded-md text-white"
+              style={{ background: "var(--color-red)" }}>
+              <Search size={13} />
             </button>
           </form>
         </div>
 
+        {/* Drawer nav */}
         <nav className="flex-1 py-2 overflow-y-auto">
-          <p className="px-5 pt-3 pb-1 text-[10px] tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.25)" }}>Navegar</p>
+          <p className="px-4 pt-3 pb-1.5 text-[9px] tracking-[0.18em] uppercase"
+            style={{ color: "rgba(255,255,255,0.2)" }}>Navegar</p>
           {ALL_LINKS.map(({ href, label, Icon, live }) => {
             const active = pathname === href;
             return (
               <Link key={href} href={href}
-                className="flex items-center gap-3 px-5 py-3 text-sm relative transition-colors"
-                style={{ color: active ? "#fff" : "rgba(255,255,255,0.6)", background: active ? "rgba(220,38,38,0.08)" : "transparent" }}>
-                {active && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r" style={{ background: "var(--color-red)" }} />}
-                <div className="w-7 h-7 rounded-md flex items-center justify-center shrink-0"
-                  style={{ background: active ? "rgba(220,38,38,0.2)" : "rgba(255,255,255,0.06)" }}>
-                  <Icon size={14} />
+                className="flex items-center gap-3 px-4 py-2.5 text-[13px] relative transition-colors"
+                style={{
+                  color: active ? "#fff" : "rgba(255,255,255,0.5)",
+                  background: active ? "rgba(229,9,20,0.07)" : "transparent"
+                }}>
+                {active && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-[2px] rounded-r"
+                    style={{ background: "var(--color-red)" }} />
+                )}
+                <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+                  style={{ background: active ? "rgba(229,9,20,0.18)" : "rgba(255,255,255,0.05)" }}>
+                  <Icon size={12} />
                 </div>
-                <span className="flex-1">{label}</span>
+                <span className="flex-1 font-medium">{label}</span>
                 {live && <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />}
               </Link>
             );
           })}
 
-          <p className="px-5 pt-5 pb-1 text-[10px] tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.25)" }}>Preferências</p>
-          {/* Botão toggle para layout clássico */}
+          <p className="px-4 pt-4 pb-1.5 text-[9px] tracking-[0.18em] uppercase"
+            style={{ color: "rgba(255,255,255,0.2)" }}>Preferências</p>
           <button onClick={toggleLayout}
-            className="w-full flex items-center gap-3 px-5 py-3 text-sm transition-colors"
-            style={{ color: "rgba(255,255,255,0.6)" }}>
-            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
-              <Monitor size={14} />
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] transition-colors"
+            style={{ color: "rgba(255,255,255,0.5)" }}>
+            <div className="w-6 h-6 rounded-md flex items-center justify-center"
+              style={{ background: "rgba(255,255,255,0.05)" }}>
+              <Monitor size={12} />
             </div>
-            Layout clássico (PC)
+            Layout clássico
           </button>
 
-          <p className="px-5 pt-5 pb-1 text-[10px] tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.25)" }}>Conta</p>
+          <p className="px-4 pt-4 pb-1.5 text-[9px] tracking-[0.18em] uppercase"
+            style={{ color: "rgba(255,255,255,0.2)" }}>Conta</p>
           <button onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-5 py-3 text-sm transition-colors"
-            style={{ color: "rgba(255,255,255,0.6)" }}>
-            <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
-              <LogOut size={14} />
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] transition-colors"
+            style={{ color: "rgba(255,255,255,0.5)" }}>
+            <div className="w-6 h-6 rounded-md flex items-center justify-center"
+              style={{ background: "rgba(255,255,255,0.05)" }}>
+              <LogOut size={12} />
             </div>
             Sair
           </button>
         </nav>
 
-        <div className="px-5 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0" style={{ background: "var(--color-red)" }}>
+        {/* Drawer user footer */}
+        <div className="px-4 py-3.5" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0"
+              style={{ background: "var(--color-red)" }}>
               {initials}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm text-white font-medium truncate">{user.user_metadata?.full_name || "Usuário"}</p>
-              <p className="text-[11px] truncate" style={{ color: "rgba(255,255,255,0.4)" }}>{user.email}</p>
+              <p className="text-[13px] text-white font-medium truncate leading-tight">
+                {user.user_metadata?.full_name || "Usuário"}
+              </p>
+              <p className="text-[11px] truncate" style={{ color: "rgba(255,255,255,0.3)" }}>
+                {user.email}
+              </p>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Bottom nav — aparece em todas as telas no layout mobile */}
+      {/* Bottom navigation */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around h-16 pb-1"
-        style={{ background: "rgba(13,13,13,0.98)", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+        className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around h-14 pb-safe"
+        style={{ background: "rgba(8,8,8,0.97)", borderTop: "1px solid rgba(255,255,255,0.05)" }}
       >
-        {ALL_LINKS.filter((l) => BOTTOM_LINKS.includes(l.href)).map(({ href, label, Icon }) => {
+        {ALL_LINKS.filter(l => BOTTOM_LINKS.includes(l.href)).map(({ href, label, Icon }) => {
           const active = pathname === href;
           return (
-            <Link key={href} href={href} className="flex flex-col items-center gap-1 flex-1 py-2">
-              <Icon size={20} color={active ? "var(--color-red)" : "rgba(255,255,255,0.35)"} />
-              <span className="text-[10px]" style={{ color: active ? "var(--color-red)" : "rgba(255,255,255,0.35)" }}>{label}</span>
-              {active && <span className="w-1 h-1 rounded-full" style={{ background: "var(--color-red)", marginTop: "-2px" }} />}
+            <Link key={href} href={href}
+              className="flex flex-col items-center justify-center gap-1 flex-1 h-full relative">
+              {active && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-[2px] rounded-b-full"
+                  style={{ background: "var(--color-red)" }} />
+              )}
+              <Icon size={18} color={active ? "var(--color-red)" : "rgba(255,255,255,0.3)"} />
+              <span className="text-[10px] font-medium"
+                style={{ color: active ? "var(--color-red)" : "rgba(255,255,255,0.3)" }}>
+                {label}
+              </span>
             </Link>
           );
         })}
-        <button onClick={() => setDrawerOpen(true)} className="flex flex-col items-center gap-1 flex-1 py-2">
-          <Menu size={20} color="rgba(255,255,255,0.35)" />
-          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>Menu</span>
+        <button onClick={() => setDrawerOpen(true)}
+          className="flex flex-col items-center justify-center gap-1 flex-1 h-full">
+          <Menu size={18} color="rgba(255,255,255,0.3)" />
+          <span className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.3)" }}>Menu</span>
         </button>
       </nav>
 
-      <div className="h-16" />
+      <div className="h-12" />
     </>
   );
 }

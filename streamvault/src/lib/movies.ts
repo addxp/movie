@@ -33,7 +33,7 @@ export async function getMoviesByCollection(): Promise<Record<string, Movie[]>> 
     .from("movies")
     .select("*")
     .not("collection", "is", null)
-    .order("release_year", { ascending: true })
+    .order("release_year", { ascending: false })
     .limit(200);
 
   if (error || !data) return {};
@@ -78,6 +78,7 @@ export async function getFeaturedMovie(): Promise<Movie | null> {
     .select("*")
     .not("backdrop", "is", null)
     .not("backdrop", "eq", "")
+    .eq("type", "movie")
     .order("created_at", { ascending: false })
     .limit(50);
 

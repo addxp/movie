@@ -120,7 +120,7 @@ export default function CollectionRow({ collection, movies, userId }: Props) {
         </button>
 
         <div ref={rowRef} className="scroll-row flex gap-3 px-6">
-          {movies.map((movie) => (
+          {[...movies].sort((a, b) => (b.release_year ?? 0) - (a.release_year ?? 0)).map((movie) => (
             <CollectionCard key={movie.id} movie={movie} userId={userId} />
           ))}
         </div>
