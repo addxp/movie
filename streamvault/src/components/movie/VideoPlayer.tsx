@@ -22,7 +22,7 @@ export default function VideoPlayer({
 }: VideoPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState(false);
-  const [source, setSource] = useState<"embed" | "superflix">("embed");
+  const [source, setSource] = useState<"embed" | "superflix">("superflix");
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
