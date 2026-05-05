@@ -19,7 +19,7 @@ export default async function CollectionPage({ params }: Props) {
     .from("movies")
     .select("*")
     .eq("collection", collection)
-    .order("release_year", { ascending: true });
+    .order("release_year", { ascending: false });
 
   if (!movies || movies.length === 0) notFound();
 
