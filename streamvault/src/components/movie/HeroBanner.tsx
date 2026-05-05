@@ -84,7 +84,7 @@ export default function HeroBanner({ movie, userId }: HeroBannerProps) {
       {/* ── Content ── */}
       <div className="absolute inset-0 flex items-end pb-28 px-8 lg:px-16">
         <div className="max-w-2xl" style={{
-          animation: loaded ? "heroIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards" : "none",
+          animation: "heroIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards",
           opacity: 0,
         }}>
 
