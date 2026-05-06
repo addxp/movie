@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMovieById, getEpisodesBySeries, groupEpisodesBySeason } from "@/lib/movies";
 import VideoPlayer from "@/components/movie/VideoPlayer";
 import FavoriteButton from "@/components/movie/FavoriteButton";
+import CommentSection from "@/components/movie/CommentSection";
 import Navbar from "@/components/layout/Navbar";
 
 interface Props { params: Promise<{ id: string }>; }
@@ -20,7 +21,33 @@ export default async function MoviePage({ params }: Props) {
 
   const isSeries = movie.type === "series";
   const episodes = isSeries ? await getEpisodesBySeries(id) : [];
-  const seasons = isSeries ? groupEpisodesBySeason(episodes) : {};
+  const seasons  = isSeries ? groupEpisodesBySeason(episodes) : {};
+
+  // Busca comentários com perfil
+  const { data: comments } = await supabase
+    .from("comments")
+    .select("id, user_id, content, created_at, profiles(username)")
+    .eq("movie_id", id)
+    .order("created_at", { ascending: false });
+
+  // Rating do usuário logado
+  const { data: myRatingRow } = await supabase
+    .from("ratings")
+    .select("score")
+    .eq("movie_id", id)
+    .eq("user_id", user.id)
+    .single();
+
+  // Média de ratings
+  const { data: allRatings } = await supabase
+    .from("ratings")
+    .select("score")
+    .eq("movie_id", id);
+
+  const avgRating =
+    allRatings && allRatings.length > 0
+      ? allRatings.reduce((s, r) => s + r.score, 0) / allRatings.length
+      : null;
 
   const bgImage = movie.backdrop || movie.thumbnail;
 
@@ -43,7 +70,7 @@ export default async function MoviePage({ params }: Props) {
           <ArrowLeft size={16} /> Voltar
         </Link>
 
-        {/* Hero com backdrop */}
+        {/* Hero */}
         {bgImage && (
           <div className="relative w-full h-64 md:h-80 rounded-2xl overflow-hidden mb-8 shadow-2xl">
             <img src={bgImage} alt={movie.title} className="w-full h-full object-cover object-center" />
@@ -103,6 +130,12 @@ export default async function MoviePage({ params }: Props) {
               {movie.rating && (
                 <span className="flex items-center gap-1.5 text-yellow-400 font-bold">
                   <Star size={14} fill="currentColor" /> {movie.rating.toFixed(1)}
+                </span>
+              )}
+              {avgRating && (
+                <span className="flex items-center gap-1.5 text-yellow-300/80 font-semibold text-xs">
+                  ★ {avgRating.toFixed(1)}
+                  <span className="text-white/25 font-normal">comunidade</span>
                 </span>
               )}
               {movie.release_year && (
@@ -191,6 +224,16 @@ export default async function MoviePage({ params }: Props) {
                 )
               )}
             </div>
+
+            {/* ── Comentários e Avaliação ── */}
+            <CommentSection
+              movieId={movie.id}
+              userId={user.id}
+              initialComments={(comments as any) || []}
+              initialRating={myRatingRow?.score ?? null}
+              avgRating={avgRating}
+              totalRatings={allRatings?.length ?? 0}
+            />
           </div>
         </div>
       </div>
