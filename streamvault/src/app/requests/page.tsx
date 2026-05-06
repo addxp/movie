@@ -1,4 +1,3 @@
- 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
@@ -17,53 +16,82 @@ export default async function RequestsPage() {
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
+  // ✅ removido join com profiles que quebrava o RLS
   const { data: allRequests } = await supabase
     .from("requests")
-    .select("*, profiles:user_id(email)")
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(50);
+
+  const pendingCount = allRequests?.filter((r) => r.status === "pending").length ?? 0;
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       <Navbar user={user} />
-      <div className="pt-24 pb-20 px-8 lg:px-16 max-w-5xl mx-auto">
 
-        <div className="flex items-center gap-3 mb-8">
-          <MessageSquarePlus size={28} className="text-[var(--color-red)]" />
-          <h1 className="text-4xl text-white font-bold" style={{ fontFamily: "var(--font-display)" }}>
-            PEDIDOS
-          </h1>
+      <div className="pt-24 pb-20 px-6 lg:px-14 max-w-6xl mx-auto">
+
+        {/* Header */}
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-2">
+            <MessageSquarePlus size={22} className="text-[var(--color-red)]" />
+            <h1
+              className="text-5xl font-black text-white tracking-tight"
+              style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.01em" }}
+            >
+              PEDIDOS
+            </h1>
+          </div>
+          <p className="text-white/30 text-sm ml-9">
+            Sugira filmes, séries e animes para adicionar à plataforma.
+          </p>
         </div>
 
-        <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
-          {/* Lista de pedidos */}
+        <div className="grid lg:grid-cols-[1fr_360px] gap-8 items-start">
+
+          {/* ── Lista da comunidade ── */}
           <div>
-            <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
-              Pedidos da Comunidade
-              <span className="text-[#555] text-xs bg-white/5 px-2 py-0.5 rounded-full">
-                {allRequests?.length || 0}
-              </span>
-            </h2>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-white font-semibold flex items-center gap-2.5">
+                Pedidos da Comunidade
+                {(allRequests?.length ?? 0) > 0 && (
+                  <span className="text-[10px] font-bold bg-white/5 text-white/40 px-2 py-0.5 rounded-full border border-white/8">
+                    {allRequests?.length}
+                  </span>
+                )}
+              </h2>
+              {pendingCount > 0 && (
+                <span className="text-[10px] text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded-full font-semibold">
+                  {pendingCount} pendente{pendingCount > 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
             <RequestList requests={allRequests || []} myUserId={user.id} />
           </div>
 
-          {/* Formulário */}
-          <div className="sticky top-24">
-            <h2 className="text-white font-semibold mb-4">Fazer um Pedido</h2>
-            <RequestForm userId={user.id} />
+          {/* ── Sidebar: form + meus pedidos ── */}
+          <div className="sticky top-24 space-y-6">
+            <div>
+              <h2 className="text-white font-semibold mb-4">Fazer um Pedido</h2>
+              <RequestForm userId={user.id} />
+            </div>
 
-            {/* Meus pedidos */}
             {myRequests && myRequests.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-[#555] text-xs uppercase tracking-wider mb-3">Meus Pedidos</h3>
+              <div>
+                <h3 className="text-white/30 text-[11px] uppercase tracking-widest mb-3 font-semibold">
+                  Meus Pedidos
+                </h3>
                 <div className="space-y-2">
                   {myRequests.slice(0, 5).map((req) => (
-                    <div key={req.id} className="bg-[var(--color-card)] rounded-lg p-3 border border-white/5">
+                    <div
+                      key={req.id}
+                      className="bg-[var(--color-card)] rounded-xl p-3.5 border border-white/5 hover:border-white/10 transition-colors"
+                    >
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-white text-xs font-medium truncate">{req.title}</p>
+                        <p className="text-white text-xs font-semibold truncate">{req.title}</p>
                         <StatusBadge status={req.status} />
                       </div>
-                      <p className="text-[#555] text-[10px] mt-1 capitalize">{req.type}</p>
+                      <p className="text-white/25 text-[10px] mt-1 capitalize">{req.type}</p>
                     </div>
                   ))}
                 </div>
@@ -78,19 +106,19 @@ export default async function RequestsPage() {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    pending: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-    approved: "bg-green-500/20 text-green-400 border-green-500/30",
-    rejected: "bg-red-500/20 text-red-400 border-red-500/30",
-    done: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    pending:  "bg-yellow-500/15 text-yellow-400 border-yellow-500/25",
+    approved: "bg-green-500/15 text-green-400 border-green-500/25",
+    rejected: "bg-red-500/15 text-red-400 border-red-500/25",
+    done:     "bg-blue-500/15 text-blue-400 border-blue-500/25",
   };
   const labels: Record<string, string> = {
-    pending: "Pendente",
+    pending:  "Pendente",
     approved: "Aprovado",
     rejected: "Negado",
-    done: "Adicionado",
+    done:     "Adicionado ✓",
   };
   return (
-    <span className={"text-[9px] font-bold px-1.5 py-0.5 rounded border " + (styles[status] || styles.pending)}>
+    <span className={"text-[9px] font-bold px-1.5 py-0.5 rounded-md border flex-shrink-0 " + (styles[status] || styles.pending)}>
       {labels[status] || "Pendente"}
     </span>
   );
