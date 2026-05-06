@@ -10,13 +10,21 @@ export default async function RequestsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
+  // Verifica se é admin pela tabela admins
+  const { data: adminRow } = await supabase
+    .from("admins")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
+
+  const isAdmin = !!adminRow;
+
   const { data: myRequests } = await supabase
     .from("requests")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
-  // ✅ removido join com profiles que quebrava o RLS
   const { data: allRequests } = await supabase
     .from("requests")
     .select("*")
@@ -41,6 +49,11 @@ export default async function RequestsPage() {
             >
               PEDIDOS
             </h1>
+            {isAdmin && (
+              <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-[var(--color-red)] text-white tracking-widest uppercase">
+                Admin
+              </span>
+            )}
           </div>
           <p className="text-white/30 text-sm ml-9">
             Sugira filmes, séries e animes para adicionar à plataforma.
@@ -49,7 +62,7 @@ export default async function RequestsPage() {
 
         <div className="grid lg:grid-cols-[1fr_360px] gap-8 items-start">
 
-          {/* ── Lista da comunidade ── */}
+          {/* Lista da comunidade */}
           <div>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-white font-semibold flex items-center gap-2.5">
@@ -66,10 +79,10 @@ export default async function RequestsPage() {
                 </span>
               )}
             </div>
-            <RequestList requests={allRequests || []} myUserId={user.id} />
+            <RequestList requests={allRequests || []} myUserId={user.id} isAdmin={isAdmin} />
           </div>
 
-          {/* ── Sidebar: form + meus pedidos ── */}
+          {/* Sidebar */}
           <div className="sticky top-24 space-y-6">
             <div>
               <h2 className="text-white font-semibold mb-4">Fazer um Pedido</h2>
