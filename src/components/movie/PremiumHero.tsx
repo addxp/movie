@@ -38,7 +38,7 @@ export default function PremiumHero({ movies, userId }: PremiumHeroProps) {
   const backdrop = movie.backdrop || movie.thumbnail;
 
   return (
-    <section style={{ position: "relative", height: "86vh", minHeight: "560px", overflow: "hidden" }}>
+    <section className="ph-hero-section" style={{ position: "relative", height: "86vh", minHeight: "560px", overflow: "hidden" }}>
       <style>{`
         @keyframes ph-in { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
         .ph-btn-watch { transition: transform 0.25s cubic-bezier(.34,1.3,.64,1), box-shadow 0.25s ease, background 0.2s ease; }
@@ -49,6 +49,10 @@ export default function PremiumHero({ movies, userId }: PremiumHeroProps) {
         .ph-hero-wrap:hover .ph-arrow { opacity: 1; }
         .ph-arrow:hover { background: rgba(255,255,255,0.14); }
         .ph-dot { transition: width 0.3s ease, background 0.3s ease; cursor: pointer; }
+        @media (max-width: 640px) {
+          .ph-hero-section { height: 78vh !important; min-height: 480px !important; }
+          .ph-arrow { display: none; }
+        }
       `}</style>
 
       <div className="ph-hero-wrap" style={{ position: "absolute", inset: 0 }}>
@@ -122,7 +126,7 @@ export default function PremiumHero({ movies, userId }: PremiumHeroProps) {
               {movie.description}
             </p>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
               <Link href={"/movie/" + movie.id + "#player"} className="ph-btn-watch" style={{
                 display: "flex", alignItems: "center", gap: "10px",
                 background: "var(--red)", color: "#fff", textDecoration: "none",

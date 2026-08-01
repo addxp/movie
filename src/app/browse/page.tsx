@@ -215,11 +215,20 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
         </div>
       )}
 
-      <div style={{
+      <style>{`
+        .sv-premium-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 3fr) minmax(280px, 1fr);
+          gap: 40px;
+        }
+        @media (max-width: 900px) {
+          .sv-premium-grid { grid-template-columns: 1fr; gap: 32px; }
+        }
+      `}</style>
+
+      <div className="sv-premium-grid" style={{
         position: "relative", zIndex: 10,
-        display: "grid", gridTemplateColumns: "minmax(0, 3fr) minmax(280px, 1fr)",
-        gap: "40px",
-        padding: "40px clamp(24px, 5vw, 72px) 0",
+        padding: "40px clamp(16px, 5vw, 72px) 0",
         maxWidth: "1680px", margin: "0 auto",
       }}>
         {/* Left 75% — carousels */}
