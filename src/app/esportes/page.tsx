@@ -7,7 +7,7 @@ export const revalidate = 60; // atualiza a cada 60 segundos
 
 async function getEventos() {
   try {
-    const res = await fetch("https://superflixapi.online/lista?category=eventos&format=json", {
+    const res = await fetch("https://superflixapi.pro/lista?category=eventos&format=json", {
       next: { revalidate: 60 }
     });
     const data = await res.json();

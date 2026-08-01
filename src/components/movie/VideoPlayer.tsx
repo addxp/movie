@@ -110,9 +110,9 @@ export default function VideoPlayer({
     if (isEmbedPlay(videoUrl) || tmdbId) {
       if (source === "superflix" && tmdbId) {
         if (isSerieUrl(videoUrl)) {
-          return `https://superflixapi.online/serie/${tmdbId}`;
+          return `https://superflixapi.pro/serie/${tmdbId}`;
         }
-        return `https://superflixapi.online/filme/${tmdbId}`;
+        return `https://superflixapi.pro/filme/${tmdbId}`;
       }
       // Fonte embed: usa a URL diretamente (já está no formato correto)
       return videoUrl;
