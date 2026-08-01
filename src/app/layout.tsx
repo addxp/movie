@@ -22,10 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <AnnouncementBanner />
         {children}
-        <body>
-  <TerminalEasterEgg />
-  {children}
-</body>
+        <TerminalEasterEgg />
       </body>
     </html>
   );

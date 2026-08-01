@@ -123,7 +123,7 @@ export default function PremiumHero({ movies, userId }: PremiumHeroProps) {
             </p>
 
             <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-              <Link href={"/watch/" + movie.id} className="ph-btn-watch" style={{
+              <Link href={"/movie/" + movie.id + "#player"} className="ph-btn-watch" style={{
                 display: "flex", alignItems: "center", gap: "10px",
                 background: "var(--red)", color: "#fff", textDecoration: "none",
                 padding: "14px 28px", borderRadius: "var(--radius-sm)",
