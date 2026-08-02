@@ -83,6 +83,16 @@ function escapeForIlike(q: string) {
   return q.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/,/g, "\\,").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
 
+export async function listProfiles(limit = 40): Promise<Profile[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return data || [];
+}
+
 export async function searchProfiles(query: string): Promise<Profile[]> {
   const clean = query.trim();
   if (!clean) return [];

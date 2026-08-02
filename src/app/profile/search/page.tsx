@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { searchProfiles } from "@/lib/profiles";
+import { searchProfiles, listProfiles } from "@/lib/profiles";
 import Navbar from "@/components/layout/Navbar";
 import Link from "next/link";
 import { Search } from "lucide-react";
@@ -8,16 +8,18 @@ export default async function ProfileSearchPage({ searchParams }: { searchParams
   const { q } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const results = q ? await searchProfiles(q) : [];
+  const results = q ? await searchProfiles(q) : await listProfiles();
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <Navbar user={user} />
       <div style={{ maxWidth: "880px", margin: "0 auto", padding: "40px clamp(16px, 5vw, 40px) 80px" }}>
         <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "28px", color: "var(--text)", marginBottom: "6px" }}>
-          Buscar Perfis
+          {q ? "Buscar Perfis" : "Descobrir Perfis"}
         </h1>
-        <p style={{ color: "var(--text-3)", fontSize: "13px", marginBottom: "26px" }}>Encontre outros usuários do StreamVault.</p>
+        <p style={{ color: "var(--text-3)", fontSize: "13px", marginBottom: "26px" }}>
+          {q ? "Encontre outros usuários do StreamVault." : "Todo mundo que já criou conta no StreamVault."}
+        </p>
 
         <form method="GET" style={{ position: "relative", marginBottom: "32px" }}>
           <Search size={16} color="var(--text-3)" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)" }} />
@@ -34,6 +36,9 @@ export default async function ProfileSearchPage({ searchParams }: { searchParams
 
         {q && results.length === 0 && (
           <p style={{ color: "var(--text-3)", fontSize: "13px" }}>Nenhum perfil encontrado para &quot;{q}&quot;.</p>
+        )}
+        {!q && results.length === 0 && (
+          <p style={{ color: "var(--text-3)", fontSize: "13px" }}>Ainda ninguém criou um perfil.</p>
         )}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "14px" }}>
