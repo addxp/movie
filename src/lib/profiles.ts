@@ -48,6 +48,24 @@ export async function isFollowing(viewerId: string, targetId: string): Promise<b
   return !!data;
 }
 
+export async function getFollowers(userId: string): Promise<Profile[]> {
+  const supabase = await createClient();
+  const { data: rows } = await supabase.from("follows").select("follower_id").eq("following_id", userId);
+  const ids = (rows || []).map((r) => r.follower_id);
+  if (ids.length === 0) return [];
+  const { data } = await supabase.from("profiles").select("*").in("id", ids);
+  return data || [];
+}
+
+export async function getFollowing(userId: string): Promise<Profile[]> {
+  const supabase = await createClient();
+  const { data: rows } = await supabase.from("follows").select("following_id").eq("follower_id", userId);
+  const ids = (rows || []).map((r) => r.following_id);
+  if (ids.length === 0) return [];
+  const { data } = await supabase.from("profiles").select("*").in("id", ids);
+  return data || [];
+}
+
 export interface ReviewWithMovie {
   id: string;
   user_id: string;

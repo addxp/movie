@@ -27,7 +27,7 @@ export default async function MyProfilePage() {
 
       <div style={{ maxWidth: "920px", margin: "0 auto", padding: "40px 0 80px" }}>
         <ProfileEditor userId={user.id} profile={profile} />
-        <StatsRow stats={stats} />
+        <StatsRow stats={stats} username={profile?.username ?? user.id} />
 
         <div style={{ padding: "0 20px" }}>
           <section style={{ marginTop: "40px" }}>

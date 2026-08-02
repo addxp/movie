@@ -62,23 +62,21 @@ export async function searchMovies(query: string): Promise<Movie[]> {
   const clean = query.trim();
   if (!clean) return [];
 
-  // PostgREST's .or() filter string treats `,`, `(`, `)`, and `%` as
-  // structural characters. Left unescaped, a search like "ação, aventura"
-  // or "vingadores (2024)" breaks the filter syntax and crashes the
-  // Server Component render. Escape them so any input is safe.
-  const safe = clean
-    .replace(/\\/g, "\\\\")
-    .replace(/%/g, "\\%")
-    .replace(/,/g, "\\,")
-    .replace(/\(/g, "\\(")
-    .replace(/\)/g, "\\)");
+  // Split into words on ANY separator (space, hyphen, etc.) and rejoin with
+  // "%" wildcards, so "homem aranha", "homem-aranha" and "homemaranha" all
+  // match a title like "Homem-Aranha" regardless of how it was typed.
+  const escapeWord = (w: string) =>
+    w.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/,/g, "\\,").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+
+  const words = clean.split(/[^\p{L}\p{N}]+/u).filter(Boolean).map(escapeWord);
+  const pattern = "%" + (words.length > 0 ? words.join("%") : escapeWord(clean)) + "%";
 
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("movies")
       .select("*")
-      .or(`title.ilike.%${safe}%,description.ilike.%${safe}%`)
+      .or(`title.ilike.${pattern},description.ilike.${pattern}`)
       .limit(20);
 
     if (error) {

@@ -65,7 +65,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
         {profile.bio && <p style={{ color: "var(--text-2)", fontSize: "13.5px", marginTop: "14px", padding: "0 20px", maxWidth: "560px", lineHeight: 1.5 }}>{profile.bio}</p>}
 
-        <StatsRow stats={stats} />
+        <StatsRow stats={stats} username={profile.username} />
 
         <div style={{ padding: "0 20px" }}>
           <section style={{ marginTop: "36px" }}>

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Search, LogOut, X, Menu, Home, Tv, Sword, Trophy,
-  BookOpen, Star, FolderOpen, Radio, ShieldCheck, Download,
+  BookOpen, Star, FolderOpen, Radio, ShieldCheck, Film,
   Monitor, UserCircle, Bell, Heart, ChevronRight,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
@@ -27,6 +27,7 @@ const NAV_GROUPS = [
     label: "Navegar",
     items: [
       { href: "/browse",      label: "Início",    Icon: Home },
+      { href: "/movies",      label: "Filmes",    Icon: Film },
       { href: "/series",      label: "Séries",    Icon: Tv },
       { href: "/animes",      label: "Animes",    Icon: Sword },
       { href: "/esportes",    label: "Esportes",  Icon: Trophy },
@@ -39,7 +40,6 @@ const NAV_GROUPS = [
       { href: "/leitura",     label: "Leitura",   Icon: BookOpen },
       { href: "/favorites",   label: "Favoritos", Icon: Star },
       { href: "/collections", label: "Coleções",  Icon: FolderOpen },
-      { href: "/downloads",   label: "Downloads", Icon: Download },
     ],
   },
   {
@@ -51,7 +51,7 @@ const NAV_GROUPS = [
 ];
 
 const ALL_LINKS = NAV_GROUPS.flatMap((g) => g.items);
-const BOTTOM_LINKS = ["/browse", "/series", "/animes", "/downloads"];
+const BOTTOM_LINKS = ["/browse", "/movies", "/series", "/animes"];
 const LAYOUT_KEY = "streamvault_layout";
 
 export default function Navbar({ user }: NavbarProps) {
