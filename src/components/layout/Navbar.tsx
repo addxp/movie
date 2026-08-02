@@ -543,6 +543,13 @@ export default function Navbar({ user }: NavbarProps) {
             <span className="sv4-dr-label" style={{ fontWeight: pathname==="/profile" ? 600 : 400, color: pathname==="/profile" ? "var(--text)" : "var(--text-2)" }}>Meu perfil</span>
             <span className="sv4-dr-chevron"><ChevronRight size={13} color="var(--text-4)" /></span>
           </Link>
+          <Link href="/profile/search" className={`sv4-dr-link${pathname === "/profile/search" ? " active" : ""}`}>
+            <div className="sv4-dr-icon" style={{ background: pathname==="/profile/search" ? "var(--red-dim)" : "rgba(255,255,255,0.04)", border:`1px solid ${pathname==="/profile/search" ? "var(--red-border)" : "var(--border)"}`, color: pathname==="/profile/search" ? "var(--red)" : "var(--text-3)" }}>
+              <Search size={15} strokeWidth={1.7} />
+            </div>
+            <span className="sv4-dr-label" style={{ fontWeight: pathname==="/profile/search" ? 600 : 400, color: pathname==="/profile/search" ? "var(--text)" : "var(--text-2)" }}>Buscar perfis</span>
+            <span className="sv4-dr-chevron"><ChevronRight size={13} color="var(--text-4)" /></span>
+          </Link>
           <button
             onClick={handleSignOut}
             style={{ width:"100%", display:"flex", alignItems:"center", gap:"13px", padding:"9px 18px", background:"none", border:"none", cursor:"pointer" }}

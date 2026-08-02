@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import AnnouncementBanner from "@/components/ui/AnnouncementBanner";
 import TerminalEasterEgg from "@/components/TerminalEasterEgg";
+import ProfileGate from "@/components/profile/ProfileGate";
 
 export const metadata: Metadata = {
   title: "StreamVault",
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AnnouncementBanner />
         {children}
         <TerminalEasterEgg />
+        <ProfileGate />
       </body>
     </html>
   );
