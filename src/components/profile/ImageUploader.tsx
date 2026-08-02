@@ -8,9 +8,10 @@ interface ImageUploaderProps {
   kind: "avatar" | "cover";
   currentUrl: string | null;
   onUploaded: (url: string) => void;
+  onPreview?: (localUrl: string) => void;
 }
 
-export default function ImageUploader({ userId, kind, currentUrl, onUploaded }: ImageUploaderProps) {
+export default function ImageUploader({ userId, kind, currentUrl, onUploaded, onPreview }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +20,7 @@ export default function ImageUploader({ userId, kind, currentUrl, onUploaded }: 
     if (!file.type.startsWith("image/")) { setError("Escolha um arquivo de imagem."); return; }
     if (file.size > 5 * 1024 * 1024) { setError("Imagem muito grande (máx. 5MB)."); return; }
 
+    onPreview?.(URL.createObjectURL(file));
     setUploading(true);
     setError(null);
     const supabase = createClient();

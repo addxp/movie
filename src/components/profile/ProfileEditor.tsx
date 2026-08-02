@@ -12,6 +12,8 @@ export default function ProfileEditor({ userId, profile }: { userId: string; pro
   const [username, setUsername] = useState(profile?.username ?? "");
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? null);
+  const [coverUrl, setCoverUrl] = useState(profile?.cover_url ?? null);
   const { saveProfile, loading, error } = useProfileActions();
 
   const handleSave = async () => {
@@ -26,13 +28,13 @@ export default function ProfileEditor({ userId, profile }: { userId: string; pro
       {/* Capa */}
       <div style={{
         position: "relative", height: "180px", borderRadius: "var(--radius)", overflow: "hidden",
-        background: profile?.cover_url ? undefined : "linear-gradient(135deg, #1a0407 0%, var(--bg-3) 70%)",
-        backgroundImage: profile?.cover_url ? `url(${profile.cover_url})` : undefined,
+        background: coverUrl ? undefined : "linear-gradient(135deg, #1a0407 0%, var(--bg-3) 70%)",
+        backgroundImage: coverUrl ? `url(${coverUrl})` : undefined,
         backgroundSize: "cover", backgroundPosition: "center",
         border: "1px solid var(--border-2)",
       }}>
         <div style={{ position: "absolute", top: "12px", right: "12px" }}>
-          <ImageUploader userId={userId} kind="cover" currentUrl={profile?.cover_url ?? null} onUploaded={() => router.refresh()} />
+          <ImageUploader userId={userId} kind="cover" currentUrl={coverUrl} onPreview={setCoverUrl} onUploaded={(url) => { setCoverUrl(url); router.refresh(); }} />
         </div>
       </div>
 
@@ -42,16 +44,19 @@ export default function ProfileEditor({ userId, profile }: { userId: string; pro
           <div style={{ position: "relative", flexShrink: 0 }}>
             <div style={{
               width: "92px", height: "92px", borderRadius: "50%", border: "4px solid var(--bg)",
-              background: profile?.avatar_url ? undefined : "var(--red)",
-              backgroundImage: profile?.avatar_url ? `url(${profile.avatar_url})` : undefined,
-              backgroundSize: "cover", backgroundPosition: "center",
+              background: avatarUrl ? "var(--bg-3)" : "var(--red)",
+              overflow: "hidden",
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "#fff", fontWeight: 800, fontSize: "32px", fontFamily: "var(--font-display)",
             }}>
-              {!profile?.avatar_url && (profile?.full_name || profile?.username || "?")[0]?.toUpperCase()}
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 25%" }} />
+              ) : (
+                (profile?.full_name || profile?.username || "?")[0]?.toUpperCase()
+              )}
             </div>
             <div style={{ position: "absolute", bottom: "0", right: "0" }}>
-              <ImageUploader userId={userId} kind="avatar" currentUrl={profile?.avatar_url ?? null} onUploaded={() => router.refresh()} />
+              <ImageUploader userId={userId} kind="avatar" currentUrl={avatarUrl} onPreview={setAvatarUrl} onUploaded={(url) => { setAvatarUrl(url); router.refresh(); }} />
             </div>
           </div>
           {!editing && (

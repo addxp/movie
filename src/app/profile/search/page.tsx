@@ -46,14 +46,17 @@ export default async function ProfileSearchPage({ searchParams }: { searchParams
             }}>
               <div style={{
                 width: "64px", height: "64px", borderRadius: "50%",
-                background: p.avatar_url ? undefined : "var(--red)",
-                backgroundImage: p.avatar_url ? `url(${p.avatar_url})` : undefined,
-                backgroundSize: "cover", backgroundPosition: "center",
+                background: p.avatar_url ? "var(--bg-3)" : "var(--red)",
+                overflow: "hidden",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 color: "#fff", fontWeight: 700, fontSize: "22px", fontFamily: "var(--font-display)",
                 marginBottom: "12px",
               }}>
-                {!p.avatar_url && (p.full_name || p.username)[0]?.toUpperCase()}
+                {p.avatar_url ? (
+                  <img src={p.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 25%" }} />
+                ) : (
+                  (p.full_name || p.username)[0]?.toUpperCase()
+                )}
               </div>
               <p style={{ color: "var(--text)", fontWeight: 700, fontSize: "14px" }}>{p.full_name || p.username}</p>
               <p style={{ color: "var(--text-3)", fontSize: "12px", marginTop: "2px" }}>@{p.username}</p>

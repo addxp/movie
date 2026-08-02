@@ -42,13 +42,16 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
           <div style={{ display: "flex", alignItems: "flex-end", gap: "16px" }}>
             <div style={{
               width: "92px", height: "92px", borderRadius: "50%", border: "4px solid var(--bg)", flexShrink: 0,
-              background: profile.avatar_url ? undefined : "var(--red)",
-              backgroundImage: profile.avatar_url ? `url(${profile.avatar_url})` : undefined,
-              backgroundSize: "cover", backgroundPosition: "center",
+              background: profile.avatar_url ? "var(--bg-3)" : "var(--red)",
+              overflow: "hidden",
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "#fff", fontWeight: 800, fontSize: "32px", fontFamily: "var(--font-display)",
             }}>
-              {!profile.avatar_url && (profile.full_name || profile.username)[0]?.toUpperCase()}
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 25%" }} />
+              ) : (
+                (profile.full_name || profile.username)[0]?.toUpperCase()
+              )}
             </div>
             <div style={{ paddingBottom: "6px" }}>
               <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "24px", color: "var(--text)" }}>
