@@ -84,97 +84,92 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
               </p>
             </div>
           ) : (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(118px, 1fr))",
-              gap: "16px",
-            }}>
-              {results.map((movie) => (
-                <a key={movie.id} href={"/movie/" + movie.id} style={{ textDecoration: "none" }}>
-                  <div
-                    style={{
-                      position: "relative", borderRadius: "8px", overflow: "hidden",
-                      background: "var(--bg-3)", aspectRatio: "2/3",
-                      transition: "transform 0.28s cubic-bezier(0.34,1.3,0.64,1), box-shadow 0.28s ease, border-color 0.28s ease",
-                      border: "1.5px solid transparent",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.transform = "translateY(-5px)";
-                      (e.currentTarget as HTMLElement).style.boxShadow = "0 18px 42px rgba(0,0,0,0.75)";
-                      (e.currentTarget as HTMLElement).style.borderColor = "var(--red-border)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                      (e.currentTarget as HTMLElement).style.boxShadow = "none";
-                      (e.currentTarget as HTMLElement).style.borderColor = "transparent";
-                    }}
-                  >
-                    <img
-                      src={movie.thumbnail}
-                      alt={movie.title}
-                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.5s ease" }}
-                    />
-
-                    {/* Hover overlay */}
+            <>
+              <style>{`
+                .sv-search-card { transition: transform 0.28s cubic-bezier(0.34,1.3,0.64,1), box-shadow 0.28s ease, border-color 0.28s ease; border: 1.5px solid transparent; }
+                .sv-search-card:hover { transform: translateY(-5px); box-shadow: 0 18px 42px rgba(0,0,0,0.75); border-color: var(--red-border); }
+                .sv-search-overlay { opacity: 0; transition: opacity 0.2s ease; }
+                .sv-search-card:hover .sv-search-overlay { opacity: 1; }
+              `}</style>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(118px, 1fr))",
+                gap: "16px",
+              }}>
+                {results.map((movie) => (
+                  <a key={movie.id} href={"/movie/" + movie.id} style={{ textDecoration: "none" }}>
                     <div
+                      className="sv-search-card"
                       style={{
-                        position: "absolute", inset: 0,
-                        background: "linear-gradient(to top, rgba(10,10,10,0.94) 0%, transparent 55%)",
-                        display: "flex", flexDirection: "column",
-                        justifyContent: "flex-end", padding: "12px",
-                        opacity: 0, transition: "opacity 0.2s ease",
+                        position: "relative", borderRadius: "8px", overflow: "hidden",
+                        background: "var(--bg-3)", aspectRatio: "2/3",
                       }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0"; }}
                     >
-                      <div style={{
-                        width: "36px", height: "36px", borderRadius: "50%",
-                        background: "var(--red)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        boxShadow: "0 4px 16px var(--red-glow)",
-                        margin: "0 auto 8px",
-                      }}>
-                        <Play size={13} fill="#fff" strokeWidth={0} style={{ marginLeft: "2px" }} />
+                      <img
+                        src={movie.thumbnail}
+                        alt={movie.title}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.5s ease" }}
+                      />
+
+                      {/* Hover overlay */}
+                      <div
+                        className="sv-search-overlay"
+                        style={{
+                          position: "absolute", inset: 0,
+                          background: "linear-gradient(to top, rgba(10,10,10,0.94) 0%, transparent 55%)",
+                          display: "flex", flexDirection: "column",
+                          justifyContent: "flex-end", padding: "12px",
+                        }}
+                      >
+                        <div style={{
+                          width: "36px", height: "36px", borderRadius: "50%",
+                          background: "var(--red)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          boxShadow: "0 4px 16px var(--red-glow)",
+                          margin: "0 auto 8px",
+                        }}>
+                          <Play size={13} fill="#fff" strokeWidth={0} style={{ marginLeft: "2px" }} />
+                        </div>
                       </div>
+
+                      {/* Rating badge */}
+                      {movie.rating && (
+                        <div style={{
+                          position: "absolute", top: "7px", left: "7px",
+                          background: "rgba(0,0,0,0.78)",
+                          color: "var(--red)",
+                          fontSize: "9px", fontWeight: 700,
+                          padding: "2.5px 6px", borderRadius: "4px",
+                          display: "flex", alignItems: "center", gap: "2px",
+                          border: "1px solid var(--red-border)",
+                          backdropFilter: "blur(6px)",
+                          fontFamily: "var(--font-body)",
+                        }}>
+                          ★ {movie.rating.toFixed(1)}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Rating badge */}
-                    {movie.rating && (
-                      <div style={{
-                        position: "absolute", top: "7px", left: "7px",
-                        background: "rgba(0,0,0,0.78)",
-                        color: "var(--red)",
-                        fontSize: "9px", fontWeight: 700,
-                        padding: "2.5px 6px", borderRadius: "4px",
-                        display: "flex", alignItems: "center", gap: "2px",
-                        border: "1px solid var(--red-border)",
-                        backdropFilter: "blur(6px)",
+                    {/* Title below */}
+                    <div style={{ marginTop: "8px" }}>
+                      <h3 style={{
+                        color: "var(--text-2)",
+                        fontSize: "11px", fontWeight: 500,
+                        lineHeight: 1.3,
+                        overflow: "hidden", display: "-webkit-box",
+                        WebkitLineClamp: 1, WebkitBoxOrient: "vertical",
                         fontFamily: "var(--font-body)",
                       }}>
-                        ★ {movie.rating.toFixed(1)}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Title below */}
-                  <div style={{ marginTop: "8px" }}>
-                    <h3 style={{
-                      color: "var(--text-2)",
-                      fontSize: "11px", fontWeight: 500,
-                      lineHeight: 1.3,
-                      overflow: "hidden", display: "-webkit-box",
-                      WebkitLineClamp: 1, WebkitBoxOrient: "vertical",
-                      fontFamily: "var(--font-body)",
-                    }}>
-                      {movie.title}
-                    </h3>
-                    <p style={{ color: "var(--text-4)", fontSize: "10px", marginTop: "1px", fontFamily: "var(--font-body)" }}>
-                      {movie.release_year}
-                    </p>
-                  </div>
-                </a>
-              ))}
-            </div>
+                        {movie.title}
+                      </h3>
+                      <p style={{ color: "var(--text-4)", fontSize: "10px", marginTop: "1px", fontFamily: "var(--font-body)" }}>
+                        {movie.release_year}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
