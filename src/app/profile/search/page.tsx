@@ -46,10 +46,10 @@ export default async function ProfileSearchPage({ searchParams }: { searchParams
                 display: "flex", alignItems: "center", justifyContent: "center",
                 color: "#fff", fontWeight: 700, fontSize: "16px", flexShrink: 0,
               }}>
-                {(p.display_name || p.username)[0]?.toUpperCase()}
+                {(p.full_name || p.username)[0]?.toUpperCase()}
               </div>
               <div>
-                <p style={{ color: "var(--text)", fontWeight: 600, fontSize: "13.5px" }}>{p.display_name || p.username}</p>
+                <p style={{ color: "var(--text)", fontWeight: 600, fontSize: "13.5px" }}>{p.full_name || p.username}</p>
                 <p style={{ color: "var(--text-3)", fontSize: "12px" }}>@{p.username}</p>
               </div>
             </Link>

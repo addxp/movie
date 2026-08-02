@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 export interface Profile {
   id: string;
   username: string;
-  display_name: string | null;
+  full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
   favorite_genres: string[] | null;
@@ -54,7 +54,7 @@ export async function searchProfiles(query: string): Promise<Profile[]> {
   const { data } = await supabase
     .from("profiles")
     .select("*")
-    .or(`username.ilike.%${safe}%,display_name.ilike.%${safe}%`)
+    .or(`username.ilike.%${safe}%,full_name.ilike.%${safe}%`)
     .limit(24);
   return data || [];
 }

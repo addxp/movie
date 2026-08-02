@@ -7,14 +7,14 @@ import { Pencil } from "lucide-react";
 export default function ProfileEditor({ userId, profile }: { userId: string; profile: Profile | null }) {
   const [editing, setEditing] = useState(false);
   const [username, setUsername] = useState(profile?.username ?? "");
-  const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
+  const [fullName, setDisplayName] = useState(profile?.full_name ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
   const { saveProfile, loading, error } = useProfileActions();
 
   const handleSave = async () => {
     const clean = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
     if (clean.length < 3) return;
-    const { error: err } = await saveProfile(userId, { username: clean, display_name: displayName.trim(), bio: bio.trim() });
+    const { error: err } = await saveProfile(userId, { username: clean, full_name: fullName.trim(), bio: bio.trim() });
     if (!err) { setEditing(false); }
   };
 
@@ -25,7 +25,7 @@ export default function ProfileEditor({ userId, profile }: { userId: string; pro
           <input value={username} onChange={(e) => setUsername(e.target.value)} style={inputStyle} />
         </Field>
         <Field label="Nome de exibição">
-          <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} style={inputStyle} />
+          <input value={fullName} onChange={(e) => setDisplayName(e.target.value)} style={inputStyle} />
         </Field>
         <Field label="Bio">
           <textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} style={{ ...inputStyle, resize: "vertical" as const }} />
@@ -43,7 +43,7 @@ export default function ProfileEditor({ userId, profile }: { userId: string; pro
     <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
       <div>
         <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "26px", color: "var(--text)" }}>
-          {profile?.display_name || profile?.username || "Seu Perfil"}
+          {profile?.full_name || profile?.username || "Seu Perfil"}
         </h1>
         {profile?.username && <p style={{ color: "var(--text-3)", fontSize: "13px", marginTop: "2px" }}>@{profile.username}</p>}
         {profile?.bio && <p style={{ color: "var(--text-2)", fontSize: "13.5px", marginTop: "10px", maxWidth: "560px", lineHeight: 1.5 }}>{profile.bio}</p>}

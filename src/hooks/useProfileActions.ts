@@ -7,7 +7,7 @@ export function useProfileActions() {
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
 
-  const saveProfile = async (userId: string, fields: { username: string; display_name?: string; bio?: string }) => {
+  const saveProfile = async (userId: string, fields: { username: string; full_name?: string; bio?: string }) => {
     setLoading(true);
     setError(null);
     const { error: err } = await supabase.from("profiles").upsert({ id: userId, ...fields });

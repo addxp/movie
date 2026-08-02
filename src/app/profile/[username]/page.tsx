@@ -25,7 +25,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
 
       <div style={{ maxWidth: "920px", margin: "0 auto", padding: "40px clamp(16px, 5vw, 40px) 80px" }}>
         <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "26px", color: "var(--text)" }}>
-          {profile.display_name || profile.username}
+          {profile.full_name || profile.username}
         </h1>
         <p style={{ color: "var(--text-3)", fontSize: "13px", marginTop: "2px" }}>@{profile.username}</p>
         {profile.bio && <p style={{ color: "var(--text-2)", fontSize: "13.5px", marginTop: "10px", maxWidth: "560px", lineHeight: 1.5 }}>{profile.bio}</p>}

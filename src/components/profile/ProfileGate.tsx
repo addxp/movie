@@ -8,7 +8,7 @@ export default function ProfileGate() {
   const [checked, setChecked] = useState(false);
   const [needsProfile, setNeedsProfile] = useState(false);
   const [username, setUsername] = useState("");
-  const [displayName, setDisplayName] = useState("");
+  const [fullName, setDisplayName] = useState("");
   const { saveProfile, loading, error } = useProfileActions();
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function ProfileGate() {
     e.preventDefault();
     const clean = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
     if (clean.length < 3) return;
-    const { error: err } = await saveProfile(userId, { username: clean, display_name: displayName.trim() || clean });
+    const { error: err } = await saveProfile(userId, { username: clean, full_name: fullName.trim() || clean });
     if (!err) setNeedsProfile(false);
   };
 
@@ -62,7 +62,7 @@ export default function ProfileGate() {
 
         <label style={{ fontSize: "12px", color: "var(--text-2, #999)", display: "block", margin: "16px 0 6px" }}>Nome de exibição</label>
         <input
-          value={displayName}
+          value={fullName}
           onChange={(e) => setDisplayName(e.target.value)}
           placeholder="ex: João Silva"
           style={inputStyle}
