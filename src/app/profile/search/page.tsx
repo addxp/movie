@@ -13,20 +13,21 @@ export default async function ProfileSearchPage({ searchParams }: { searchParams
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
       <Navbar user={user} />
-      <div style={{ maxWidth: "720px", margin: "0 auto", padding: "40px clamp(16px, 5vw, 40px) 80px" }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "24px", color: "var(--text)", marginBottom: "20px" }}>
+      <div style={{ maxWidth: "880px", margin: "0 auto", padding: "40px clamp(16px, 5vw, 40px) 80px" }}>
+        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: "28px", color: "var(--text)", marginBottom: "6px" }}>
           Buscar Perfis
         </h1>
+        <p style={{ color: "var(--text-3)", fontSize: "13px", marginBottom: "26px" }}>Encontre outros usuários do StreamVault.</p>
 
-        <form method="GET" style={{ position: "relative", marginBottom: "28px" }}>
-          <Search size={16} color="var(--text-3)" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
+        <form method="GET" style={{ position: "relative", marginBottom: "32px" }}>
+          <Search size={16} color="var(--text-3)" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)" }} />
           <input
             name="q"
             defaultValue={q}
             placeholder="Nome de usuário ou nome de exibição..."
             style={{
               width: "100%", background: "var(--bg-3)", border: "1px solid var(--border-2)",
-              borderRadius: "12px", padding: "13px 14px 13px 40px", color: "#fff", fontSize: "14px", outline: "none",
+              borderRadius: "var(--radius-sm)", padding: "15px 16px 15px 44px", color: "#fff", fontSize: "14.5px", outline: "none",
             }}
           />
         </form>
@@ -35,26 +36,32 @@ export default async function ProfileSearchPage({ searchParams }: { searchParams
           <p style={{ color: "var(--text-3)", fontSize: "13px" }}>Nenhum perfil encontrado para &quot;{q}&quot;.</p>
         )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "14px" }}>
           {results.map((p) => (
-            <Link key={p.id} href={"/profile/" + p.username} style={{
-              display: "flex", alignItems: "center", gap: "14px", textDecoration: "none",
-              padding: "12px", borderRadius: "12px", border: "1px solid var(--border)",
+            <Link key={p.id} href={"/profile/" + p.username} className="ps-card" style={{
+              display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center",
+              textDecoration: "none", padding: "26px 16px", borderRadius: "var(--radius)",
+              background: "var(--bg-3)", border: "1px solid var(--border-2)",
+              transition: "transform 0.2s ease, border-color 0.2s ease",
             }}>
               <div style={{
-                width: "42px", height: "42px", borderRadius: "50%", background: "var(--red)",
+                width: "64px", height: "64px", borderRadius: "50%",
+                background: p.avatar_url ? undefined : "var(--red)",
+                backgroundImage: p.avatar_url ? `url(${p.avatar_url})` : undefined,
+                backgroundSize: "cover", backgroundPosition: "center",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                color: "#fff", fontWeight: 700, fontSize: "16px", flexShrink: 0,
+                color: "#fff", fontWeight: 700, fontSize: "22px", fontFamily: "var(--font-display)",
+                marginBottom: "12px",
               }}>
-                {(p.full_name || p.username)[0]?.toUpperCase()}
+                {!p.avatar_url && (p.full_name || p.username)[0]?.toUpperCase()}
               </div>
-              <div>
-                <p style={{ color: "var(--text)", fontWeight: 600, fontSize: "13.5px" }}>{p.full_name || p.username}</p>
-                <p style={{ color: "var(--text-3)", fontSize: "12px" }}>@{p.username}</p>
-              </div>
+              <p style={{ color: "var(--text)", fontWeight: 700, fontSize: "14px" }}>{p.full_name || p.username}</p>
+              <p style={{ color: "var(--text-3)", fontSize: "12px", marginTop: "2px" }}>@{p.username}</p>
             </Link>
           ))}
         </div>
+
+        <style>{`.ps-card:hover { transform: translateY(-4px); border-color: var(--border-3); }`}</style>
       </div>
     </div>
   );
