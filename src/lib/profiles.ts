@@ -8,6 +8,7 @@ export interface Profile {
   cover_url: string | null;
   bio: string | null;
   favorite_genres: string[] | null;
+  claimed?: boolean;
   created_at: string;
 }
 

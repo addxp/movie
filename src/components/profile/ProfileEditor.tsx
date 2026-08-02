@@ -19,7 +19,7 @@ export default function ProfileEditor({ userId, profile }: { userId: string; pro
   const handleSave = async () => {
     const clean = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
     if (clean.length < 3) return;
-    const { error: err } = await saveProfile(userId, { username: clean, full_name: fullName.trim(), bio: bio.trim() });
+    const { error: err } = await saveProfile(userId, { username: clean, full_name: fullName.trim(), bio: bio.trim(), claimed: true });
     if (!err) { setEditing(false); router.refresh(); }
   };
 

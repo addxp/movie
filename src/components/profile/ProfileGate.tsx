@@ -16,8 +16,12 @@ export default function ProfileGate() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { setChecked(true); return; }
       setUserId(user.id);
-      const { data: profile } = await supabase.from("profiles").select("id").eq("id", user.id).maybeSingle();
-      setNeedsProfile(!profile);
+      const { data: profile } = await supabase.from("profiles").select("username, full_name, claimed").eq("id", user.id).maybeSingle();
+      setNeedsProfile(!profile || !profile.claimed);
+      if (profile && !profile.claimed) {
+        setUsername(profile.username ?? "");
+        setDisplayName(profile.full_name ?? "");
+      }
       setChecked(true);
     });
   }, []);
@@ -28,7 +32,7 @@ export default function ProfileGate() {
     e.preventDefault();
     const clean = username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
     if (clean.length < 3) return;
-    const { error: err } = await saveProfile(userId, { username: clean, full_name: fullName.trim() || clean });
+    const { error: err } = await saveProfile(userId, { username: clean, full_name: fullName.trim() || clean, claimed: true });
     if (!err) setNeedsProfile(false);
   };
 
@@ -44,10 +48,10 @@ export default function ProfileGate() {
         padding: "32px",
       }}>
         <h2 style={{ fontFamily: "var(--font-display, sans-serif)", fontWeight: 800, fontSize: "20px", color: "#fff", marginBottom: "8px" }}>
-          Crie seu perfil
+          Escolha seu nome de usuário
         </h2>
         <p style={{ fontSize: "13px", color: "var(--text-2, #999)", marginBottom: "22px", lineHeight: 1.5 }}>
-          Pra avaliar filmes, favoritar títulos e aparecer na busca de perfis, primeiro escolha um nome de usuário.
+          Pra avaliar filmes, favoritar títulos e aparecer na busca de perfis com um nome seu (em vez de um gerado automaticamente).
         </p>
 
         <label style={{ fontSize: "12px", color: "var(--text-2, #999)", display: "block", marginBottom: "6px" }}>Nome de usuário</label>
@@ -75,7 +79,7 @@ export default function ProfileGate() {
           borderRadius: "var(--radius-sm, 12px)", padding: "13px", fontWeight: 700, fontSize: "14px",
           cursor: "pointer", opacity: loading ? 0.6 : 1,
         }}>
-          {loading ? "Criando..." : "Criar perfil"}
+          {loading ? "Salvando..." : "Confirmar"}
         </button>
       </form>
     </div>
