@@ -9,6 +9,10 @@
   --font-body: 'Inter', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
+  /* Aliases para páginas que usam classes Tailwind arbitrárias (bg-[var(--color-bg)]) */
+  --color-bg: #050505;
+  --color-red: #E50914;
+
   /* Surfaces — pure black, 90% of the UI */
   --bg:       #050505;
   --bg-2:     #0a0a0a;

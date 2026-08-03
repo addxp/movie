@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMovieById, getEpisodesBySeries, groupEpisodesBySeason } from "@/lib/movies";
 import VideoPlayer from "@/components/movie/VideoPlayer";
 import FavoriteButton from "@/components/movie/FavoriteButton";
+import CreateWatchPartyButton from "@/components/watchparty/CreateWatchPartyButton";
 import CommentSection from "@/components/movie/CommentSection";
 import Navbar from "@/components/layout/Navbar";
 
@@ -114,6 +115,7 @@ export default async function MoviePage({ params }: Props) {
                   ▶ Assistir T1E1
                 </Link>
               )}
+              {!isSeries && movie.video_url && <CreateWatchPartyButton movieId={movie.id} />}
               <FavoriteButton movieId={movie.id} userId={user.id} />
             </div>
           </div>
