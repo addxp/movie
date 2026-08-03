@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, AlertCircle } from "lucide-react";
 
 function isHLS(url: string) {
   return url.includes(".m3u8");
@@ -27,7 +27,20 @@ export default function GroupWatchPlayer({
   const [error, setError] = useState(false);
   const [ready, setReady] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
+  // Quando o navegador do convidado bloqueia o autoplay (política comum em Chrome/Safari
+  // mobile), o vídeo fica "preso" pausado sem nenhum aviso — isso aparece pro usuário como
+  // "o filme não inicia". Em vez de engolir o erro, mostramos um botão pra ele destravar com 1 toque.
+  const [needsManualPlay, setNeedsManualPlay] = useState(false);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const attemptPlay = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const result = video.play();
+    if (result && typeof result.catch === "function") {
+      result.then(() => setNeedsManualPlay(false)).catch(() => setNeedsManualPlay(true));
+    }
+  }, []);
 
   const startCountdownThenPlay = useCallback((targetTime: number) => {
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
@@ -37,7 +50,7 @@ export default function GroupWatchPlayer({
         if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
         setCountdown(null);
         applyingRemoteRef.current = true;
-        videoRef.current?.play().catch(() => {});
+        attemptPlay();
         setTimeout(() => { applyingRemoteRef.current = false; }, 300);
       } else {
         setCountdown(remaining);
@@ -45,7 +58,7 @@ export default function GroupWatchPlayer({
     };
     tick();
     countdownIntervalRef.current = setInterval(tick, 200);
-  }, []);
+  }, [attemptPlay]);
 
   // Carrega a fonte (HLS via proxy, igual ao player principal do site, ou mp4 direto).
   useEffect(() => {
@@ -80,7 +93,7 @@ export default function GroupWatchPlayer({
     const video = videoRef.current;
     applyingRemoteRef.current = true;
     video.currentTime = initialPosition;
-    if (initialIsPlaying) video.play().catch(() => {});
+    if (initialIsPlaying) attemptPlay();
     setTimeout(() => { applyingRemoteRef.current = false; }, 300);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
@@ -96,11 +109,11 @@ export default function GroupWatchPlayer({
       }
       applyingRemoteRef.current = true;
       if (event.type === "seek") video.currentTime = event.position;
-      if (event.type === "play") { video.currentTime = event.position; video.play().catch(() => {}); }
-      if (event.type === "pause") { video.currentTime = event.position; video.pause(); }
+      if (event.type === "play") { video.currentTime = event.position; attemptPlay(); }
+      if (event.type === "pause") { video.currentTime = event.position; video.pause(); setNeedsManualPlay(false); }
       setTimeout(() => { applyingRemoteRef.current = false; }, 300);
     });
-  }, [registerPlaybackHandler, startCountdownThenPlay]);
+  }, [registerPlaybackHandler, startCountdownThenPlay, attemptPlay]);
 
   useEffect(() => () => { if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); }, []);
 
@@ -152,6 +165,20 @@ export default function GroupWatchPlayer({
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-2 pointer-events-none">
           <span className="text-white font-black leading-none" style={{ fontSize: "96px" }}>{countdown}</span>
           <span className="text-white/70 text-sm font-medium">Vai começar pra todo mundo...</span>
+        </div>
+      )}
+      {needsManualPlay && countdown === null && (
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center gap-3">
+          <AlertCircle size={28} className="text-white/70" />
+          <p className="text-white/80 text-sm text-center max-w-[240px]">
+            Seu navegador bloqueou o início automático. Toca aqui pra assistir junto com a sala.
+          </p>
+          <button
+            onClick={attemptPlay}
+            className="flex items-center gap-2 bg-[var(--color-red)] text-white font-semibold text-sm px-5 py-2.5 rounded-lg"
+          >
+            <Play size={14} fill="#fff" /> Dar play
+          </button>
         </div>
       )}
       {isHost && (

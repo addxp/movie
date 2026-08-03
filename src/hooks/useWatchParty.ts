@@ -14,6 +14,8 @@ export interface ChatEvent {
   username: string;
   body: string;
   at: number;
+  /** true quando é um aviso automático (entrou/saiu da sala), não uma mensagem real de alguém */
+  system?: boolean;
 }
 
 export interface Participant {
@@ -46,6 +48,8 @@ export function useWatchParty({
   const [messages, setMessages] = useState<ChatEvent[]>([]);
   const onPlaybackEventRef = useRef(onPlaybackEvent);
   onPlaybackEventRef.current = onPlaybackEvent;
+  // Guarda quem já vimos na sala pra saber quem é novo (entrou) ou sumiu (saiu) a cada sync de presence.
+  const knownParticipantsRef = useRef<Map<string, string> | null>(null);
 
   // Carrega as últimas mensagens salvas, pra quem entra atrasado ver o histórico.
   useEffect(() => {
@@ -92,6 +96,29 @@ export function useWatchParty({
           isHost: entries[0]?.isHost ?? false,
         }));
         setParticipants(list);
+
+        const current = new Map(list.map((p) => [p.userId, p.username]));
+        const previous = knownParticipantsRef.current;
+
+        // Primeiro sync (quando a gente mesmo acabou de entrar): só guarda o "estado inicial",
+        // sem gerar aviso de "entrou" pra quem já estava na sala antes da gente.
+        if (previous) {
+          const systemMsgs: ChatEvent[] = [];
+          for (const [id, name] of current) {
+            if (!previous.has(id) && id !== userId) {
+              systemMsgs.push({ userId: id, username: name, body: `${name} entrou na sala`, at: Date.now(), system: true });
+            }
+          }
+          for (const [id, name] of previous) {
+            if (!current.has(id) && id !== userId) {
+              systemMsgs.push({ userId: id, username: name, body: `${name} saiu da sala`, at: Date.now(), system: true });
+            }
+          }
+          if (systemMsgs.length > 0) {
+            setMessages((prev) => [...prev.slice(-49 + systemMsgs.length), ...systemMsgs]);
+          }
+        }
+        knownParticipantsRef.current = current;
       })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
@@ -103,6 +130,7 @@ export function useWatchParty({
     return () => {
       supabase.removeChannel(channel);
       channelRef.current = null;
+      knownParticipantsRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomCode, userId]);

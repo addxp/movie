@@ -38,12 +38,18 @@ export default function ChatPanel({ messages, participants, onSend }: ChatPanelP
         {messages.length === 0 ? (
           <p className="text-white/30 text-xs text-center mt-6">Nenhuma mensagem ainda — diga oi!</p>
         ) : (
-          messages.map((m, i) => (
-            <div key={i} className="text-sm">
-              <span className="text-[var(--color-red)] font-semibold">{m.username}: </span>
-              <span className="text-white/85">{m.body}</span>
-            </div>
-          ))
+          messages.map((m, i) =>
+            m.system ? (
+              <div key={i} className="text-center text-[11px] text-white/35 italic">
+                {m.body}
+              </div>
+            ) : (
+              <div key={i} className="text-sm">
+                <span className="text-[var(--color-red)] font-semibold">{m.username}: </span>
+                <span className="text-white/85">{m.body}</span>
+              </div>
+            )
+          )
         )}
       </div>
 

@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   Search, LogOut, X, Menu, Home, Tv, Sword, Trophy,
   BookOpen, Star, FolderOpen, Radio, ShieldCheck, Film,
-  Monitor, UserCircle, Bell, Heart, ChevronRight,
+  Monitor, UserCircle, Bell, Heart, ChevronRight, Users,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
@@ -20,6 +20,7 @@ const TOP_LINKS = [
   { href: "/live",       label: "Ao Vivo", live: true },
   { href: "/top",        label: "Top 10" },
   { href: "/favorites",  label: "Favoritos" },
+  { href: "/room",       label: "Assistir em Grupo" },
 ];
 
 const NAV_GROUPS = [
@@ -40,6 +41,12 @@ const NAV_GROUPS = [
       { href: "/leitura",     label: "Leitura",   Icon: BookOpen },
       { href: "/favorites",   label: "Favoritos", Icon: Star },
       { href: "/collections", label: "Coleções",  Icon: FolderOpen },
+    ],
+  },
+  {
+    label: "Social",
+    items: [
+      { href: "/room",        label: "Assistir em Grupo", Icon: Users },
     ],
   },
   {
