@@ -4,7 +4,9 @@ import { Copy, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useWatchParty, type PlaybackEvent } from "@/hooks/useWatchParty";
 import { updateRoomPlaybackState, projectCurrentPosition, type WatchRoom } from "@/lib/watchparty/room";
+import { resolvePlaybackSource } from "@/lib/watchparty/source";
 import GroupWatchPlayer from "./GroupWatchPlayer";
+import EmbedWatchPlayer from "./EmbedWatchPlayer";
 import ChatPanel from "./ChatPanel";
 
 interface GroupWatchRoomProps {
@@ -44,9 +46,9 @@ export default function GroupWatchRoom({ room, userId, username, siteUrl }: Grou
   });
 
   const handleLocalPlaybackChange = useCallback(
-    (type: "play" | "pause" | "seek" | "manual-ping", position: number) => {
+    (type: "play" | "pause" | "seek" | "manual-ping" | "countdown" | "pause-notice", position: number) => {
       sendPlayback(type, position);
-      if (isHost && type !== "manual-ping") {
+      if (isHost && type !== "manual-ping" && type !== "countdown" && type !== "pause-notice") {
         updateRoomPlaybackState(supabase, room.id, {
           isPlaying: type !== "pause",
           position,
@@ -61,6 +63,8 @@ export default function GroupWatchRoom({ room, userId, username, siteUrl }: Grou
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const source = resolvePlaybackSource(room.video_url);
 
   return (
     <div className="grid lg:grid-cols-[1fr_320px] gap-4">
@@ -87,15 +91,25 @@ export default function GroupWatchRoom({ room, userId, username, siteUrl }: Grou
           </div>
         )}
 
-        <GroupWatchPlayer
-          videoUrl={room.video_url}
-          title={room.title}
-          isHost={isHost}
-          initialPosition={projectCurrentPosition(room)}
-          initialIsPlaying={room.is_playing}
-          onLocalPlaybackChange={handleLocalPlaybackChange}
-          registerPlaybackHandler={(handler) => (playbackHandlerRef.current = handler)}
-        />
+        {source.kind === "direct" ? (
+          <GroupWatchPlayer
+            videoUrl={source.src}
+            title={room.title}
+            isHost={isHost}
+            initialPosition={projectCurrentPosition(room)}
+            initialIsPlaying={room.is_playing}
+            onLocalPlaybackChange={handleLocalPlaybackChange}
+            registerPlaybackHandler={(handler) => (playbackHandlerRef.current = handler)}
+          />
+        ) : (
+          <EmbedWatchPlayer
+            src={source.src}
+            title={room.title}
+            isHost={isHost}
+            onLocalPlaybackChange={handleLocalPlaybackChange}
+            registerPlaybackHandler={(handler) => (playbackHandlerRef.current = handler)}
+          />
+        )}
       </div>
 
       <div className="h-[500px] lg:h-auto">

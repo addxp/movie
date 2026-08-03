@@ -1,5 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+/** Um vídeo próprio (mp4/m3u8) pode ser controlado via código — dá pra sincronizar de verdade.
+ * Um embed de terceiro (SuperFlix/EmbedPlay/YouTube/Vimeo) roda num iframe de outro domínio,
+ * que o navegador não deixa controlar por segurança — só dá pra avisar a sala manualmente. */
+export function isDirectVideoFile(url: string): boolean {
+  if (!url) return false;
+  const clean = url.split("?")[0].toLowerCase();
+  return clean.endsWith(".mp4") || clean.endsWith(".m3u8") || clean.endsWith(".webm");
+}
+
 export interface WatchRoom {
   id: string;
   code: string;
