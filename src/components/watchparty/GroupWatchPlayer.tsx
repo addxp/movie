@@ -12,9 +12,11 @@ interface GroupWatchPlayerProps {
   isHost: boolean;
   initialPosition: number;
   initialIsPlaying: boolean;
-  onLocalPlaybackChange: (type: "play" | "pause" | "seek" | "manual-ping", position: number) => void;
-  registerPlaybackHandler: (handler: (event: { type: string; position: number; senderId: string }) => void) => void;
+  onLocalPlaybackChange: (type: "play" | "pause" | "seek" | "manual-ping" | "countdown", position: number) => void;
+  registerPlaybackHandler: (handler: (event: { type: string; position: number; senderId: string; at: number }) => void) => void;
 }
+
+const COUNTDOWN_SECONDS = 3;
 
 export default function GroupWatchPlayer({
   videoUrl, title, isHost, initialPosition, initialIsPlaying,
@@ -24,6 +26,26 @@ export default function GroupWatchPlayer({
   const applyingRemoteRef = useRef(false);
   const [error, setError] = useState(false);
   const [ready, setReady] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startCountdownThenPlay = useCallback((targetTime: number) => {
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    const tick = () => {
+      const remaining = Math.ceil((targetTime - Date.now()) / 1000);
+      if (remaining <= 0) {
+        if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+        setCountdown(null);
+        applyingRemoteRef.current = true;
+        videoRef.current?.play().catch(() => {});
+        setTimeout(() => { applyingRemoteRef.current = false; }, 300);
+      } else {
+        setCountdown(remaining);
+      }
+    };
+    tick();
+    countdownIntervalRef.current = setInterval(tick, 200);
+  }, []);
 
   // Carrega a fonte (HLS via proxy, igual ao player principal do site, ou mp4 direto).
   useEffect(() => {
@@ -68,20 +90,40 @@ export default function GroupWatchPlayer({
     registerPlaybackHandler((event) => {
       const video = videoRef.current;
       if (!video) return;
+      if (event.type === "countdown") {
+        startCountdownThenPlay(event.at + event.position * 1000);
+        return;
+      }
       applyingRemoteRef.current = true;
       if (event.type === "seek") video.currentTime = event.position;
       if (event.type === "play") { video.currentTime = event.position; video.play().catch(() => {}); }
       if (event.type === "pause") { video.currentTime = event.position; video.pause(); }
       setTimeout(() => { applyingRemoteRef.current = false; }, 300);
     });
-  }, [registerPlaybackHandler]);
+  }, [registerPlaybackHandler, startCountdownThenPlay]);
+
+  useEffect(() => () => { if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); }, []);
 
   const emit = useCallback(
     (type: "play" | "pause" | "seek") => {
       if (applyingRemoteRef.current || !videoRef.current) return;
+
+      if (type === "play" && countdown === null) {
+        // Não toca na hora: pausa de novo, avisa a sala, e só toca de verdade
+        // quando a contagem regressiva (sincronizada) chegar a zero.
+        const video = videoRef.current;
+        applyingRemoteRef.current = true;
+        video.pause();
+        setTimeout(() => { applyingRemoteRef.current = false; }, 100);
+        const at = Date.now();
+        onLocalPlaybackChange("countdown", COUNTDOWN_SECONDS);
+        startCountdownThenPlay(at + COUNTDOWN_SECONDS * 1000);
+        return;
+      }
+
       onLocalPlaybackChange(type, videoRef.current.currentTime);
     },
-    [onLocalPlaybackChange]
+    [onLocalPlaybackChange, countdown, startCountdownThenPlay]
   );
 
   const nudgeGuests = () => onLocalPlaybackChange("manual-ping", videoRef.current?.currentTime ?? 0);
@@ -106,6 +148,12 @@ export default function GroupWatchPlayer({
         onSeeked={() => emit("seek")}
         title={title}
       />
+      {countdown !== null && (
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center gap-2 pointer-events-none">
+          <span className="text-white font-black leading-none" style={{ fontSize: "96px" }}>{countdown}</span>
+          <span className="text-white/70 text-sm font-medium">Vai começar pra todo mundo...</span>
+        </div>
+      )}
       {isHost && (
         <button
           onClick={nudgeGuests}

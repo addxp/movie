@@ -3,8 +3,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 
 export interface PlaybackEvent {
-  type: "play" | "pause" | "seek" | "manual-ping";
-  position: number;
+  type: "play" | "pause" | "seek" | "manual-ping" | "countdown";
+  position: number; // para "countdown", carrega a duração em segundos
   senderId: string;
   at: number; // Date.now() de quando foi emitido, pra compensar atraso de rede
 }
