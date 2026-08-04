@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Play, Sparkles, Zap, Clapperboard, Ghost, Drama, Swords, Laugh } from "lucide-react";
 import type { Movie } from "@/types";
 import { createClient } from "@/lib/supabase/client";
+import AIRecommendationModal from "@/components/movie/AIRecommendationModal";
 
 /* ── Popular Movies — top 5 with large ranking numbers ── */
 export function SidebarPopular({ movies }: { movies: Movie[] }) {
@@ -161,6 +162,7 @@ export function SidebarContinueWatching({ userId }: { userId: string }) {
 
 /* ── AI recommendation card ── */
 export function AIRecommendationCard() {
+  const [open, setOpen] = useState(false);
   return (
     <div style={{
       borderRadius: "var(--radius)", padding: "24px", textAlign: "center",
@@ -180,14 +182,19 @@ export function AIRecommendationCard() {
       <p style={{ fontSize: "12px", color: "var(--text-3)", fontFamily: "var(--font-body)", marginBottom: "18px", lineHeight: 1.5 }}>
         Deixe a IA sugerir algo com base no seu gosto.
       </p>
-      <button className="ai-cta" style={{
-        width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid var(--border-3)",
-        color: "#fff", borderRadius: "var(--radius-sm)", padding: "11px", fontFamily: "var(--font-body)",
-        fontWeight: 600, fontSize: "12.5px", cursor: "pointer", transition: "background 0.2s ease, border-color 0.2s ease",
-      }}>
+      <button
+        className="ai-cta"
+        onClick={() => setOpen(true)}
+        style={{
+          width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid var(--border-3)",
+          color: "#fff", borderRadius: "var(--radius-sm)", padding: "11px", fontFamily: "var(--font-body)",
+          fontWeight: 600, fontSize: "12.5px", cursor: "pointer", transition: "background 0.2s ease, border-color 0.2s ease",
+        }}
+      >
         Descobrir com IA
       </button>
       <style>{`.ai-cta:hover { background: var(--red-dim); border-color: var(--red-border); }`}</style>
+      {open && <AIRecommendationModal onClose={() => setOpen(false)} />}
     </div>
   );
 }
