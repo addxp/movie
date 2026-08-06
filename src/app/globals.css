@@ -12,7 +12,17 @@
   /* Aliases para páginas que usam classes Tailwind arbitrárias (bg-[var(--color-bg)]) */
   --color-bg: #050505;
   --color-red: #E50914;
+}
 
+/* Foco visível global — essencial pra navegação por controle remoto de TV e teclado.
+   O site inteiro não tinha nenhum indicador de foco antes disso. */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-red), 0 0 16px 2px rgba(229, 9, 20, 0.6);
+  transition: box-shadow 0.15s ease;
+}
+
+:root {
   /* Surfaces — pure black, 90% of the UI */
   --bg:       #050505;
   --bg-2:     #0a0a0a;

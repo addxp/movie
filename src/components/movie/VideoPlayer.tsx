@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Play, AlertCircle, Maximize, ExternalLink } from "lucide-react";
+import { Play, AlertCircle, Maximize, ExternalLink, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 interface VideoPlayerProps {
@@ -21,6 +21,7 @@ export default function VideoPlayer({
   duration,
 }: VideoPlayerProps) {
   const [playing, setPlaying] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [source, setSource] = useState<"embed" | "superflix">("superflix");
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -58,6 +59,7 @@ export default function VideoPlayer({
 
   const handlePlay = () => {
     setPlaying(true);
+    setLoading(true);
     startTracking();
   };
 
@@ -86,18 +88,15 @@ export default function VideoPlayer({
   };
 
   const getTmdbId = (url: string) => {
-    // Captura o ID após /embed/, /filme/ ou /serie/
     const match = url.match(/(?:embed|filme|serie)\/([^/?]+)/);
     return match ? match[1] : null;
   };
 
   const isHLS = (url: string) => url.includes(".m3u8");
 
-  // ✅ Reconhece ambos os domínios do EmbedPlay
   const isEmbedPlay = (url: string) =>
     url.includes("embedplayapi.site") || url.includes("embedplay.one");
 
-  // Detecta se a URL é de série
   const isSerieUrl = (url: string) =>
     url.includes("/serie/") || url.includes("/tv/");
 
@@ -114,7 +113,6 @@ export default function VideoPlayer({
         }
         return `https://superflixapi.pro/filme/${tmdbId}`;
       }
-      // Fonte embed: usa a URL diretamente (já está no formato correto)
       return videoUrl;
     }
 
@@ -148,6 +146,7 @@ export default function VideoPlayer({
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = videoUrl;
       video.play();
+      setLoading(false);
       return;
     }
 
@@ -158,22 +157,60 @@ export default function VideoPlayer({
         hls.loadSource(proxyUrl);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          setLoading(false);
           video.play().catch(() => setError(true));
         });
         hls.on(Hls.Events.ERROR, (_: unknown, data: { fatal: boolean }) => {
-          if (data.fatal) setError(true);
+          if (data.fatal) {
+            setError(true);
+            setLoading(false);
+          }
         });
       } else {
         setError(true);
+        setLoading(false);
       }
     });
   }, [playing, videoUrl]);
 
+  // Atalhos de teclado/controle remoto — estilo Netflix.
+  // Espaço: play/pause · ← →: pula 10s · Esc: sai do fullscreen
+  useEffect(() => {
+    if (!playing) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && document.fullscreenElement) {
+        document.exitFullscreen();
+        return;
+      }
+      const video = videoRef.current;
+      if (!video || !isHLS(videoUrl)) return;
+
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        video.paused ? video.play() : video.pause();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        video.currentTime = Math.min(video.currentTime + 10, video.duration || Infinity);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        video.currentTime = Math.max(video.currentTime - 10, 0);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [playing, videoUrl]);
+
   if (!playing) {
     return (
-      <div
-        className="relative w-full aspect-video bg-black rounded-xl overflow-hidden cursor-pointer group"
+      <button
+        type="button"
+        data-tv-item
+        autoFocus
         onClick={handlePlay}
+        className="relative w-full aspect-video bg-black rounded-xl overflow-hidden cursor-pointer group block text-left
+                   focus:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-red)] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         style={
           thumbnail
             ? {
@@ -184,17 +221,17 @@ export default function VideoPlayer({
             : {}
         }
       >
-        <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 transition-colors" />
+        <div className="absolute inset-0 bg-black/50 group-hover:bg-black/40 group-focus-visible:bg-black/30 transition-colors" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-20 h-20 bg-white/95 hover:bg-white rounded-full flex items-center justify-center transform group-hover:scale-110 transition-all duration-300 shadow-2xl">
+          <div className="w-20 h-20 bg-white/95 group-hover:bg-white group-focus-visible:bg-white group-focus-visible:scale-110 rounded-full flex items-center justify-center transform group-hover:scale-110 transition-all duration-300 shadow-2xl">
             <Play size={32} fill="black" className="ml-1" />
           </div>
         </div>
         <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
           <span className="text-white/70 text-sm">{title}</span>
-          <span className="text-white/50 text-xs">Clique para assistir</span>
+          <span className="text-white/50 text-xs">Pressione Enter ou clique para assistir</span>
         </div>
-      </div>
+      </button>
     );
   }
 
@@ -202,8 +239,14 @@ export default function VideoPlayer({
     return (
       <div
         ref={containerRef}
-        className="relative w-full aspect-video bg-black rounded-xl overflow-hidden"
+        tabIndex={0}
+        className="relative w-full aspect-video bg-black rounded-xl overflow-hidden focus:outline-none"
       >
+        {loading && !error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+            <Loader2 size={40} className="animate-spin text-[var(--color-red)]" />
+          </div>
+        )}
         {error ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-gray-400">
             <AlertCircle size={40} />
@@ -212,7 +255,7 @@ export default function VideoPlayer({
               href={videoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-red-400 hover:underline text-sm"
+              className="text-red-400 hover:underline text-sm focus-visible:ring-2 focus-visible:ring-[var(--color-red)] rounded"
             >
               Abrir externamente
             </a>
@@ -223,7 +266,10 @@ export default function VideoPlayer({
             controls
             autoPlay
             className="w-full h-full"
-            onError={() => setError(true)}
+            onError={() => {
+              setError(true);
+              setLoading(false);
+            }}
           />
         )}
       </div>
@@ -239,9 +285,10 @@ export default function VideoPlayer({
         <div className="flex items-center gap-2">
           <span className="text-[#555] text-xs">Fonte:</span>
           <button
+            data-tv-item
             onClick={() => setSource("embed")}
             className={
-              "px-3 py-1 rounded text-xs font-medium transition-all " +
+              "px-3 py-1 rounded text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)] " +
               (source === "embed"
                 ? "bg-[var(--color-red)] text-white"
                 : "bg-white/5 text-[#555] hover:text-white")
@@ -250,9 +297,10 @@ export default function VideoPlayer({
             EmbedPlay
           </button>
           <button
+            data-tv-item
             onClick={() => setSource("superflix")}
             className={
-              "px-3 py-1 rounded text-xs font-medium transition-all " +
+              "px-3 py-1 rounded text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)] " +
               (source === "superflix"
                 ? "bg-[var(--color-red)] text-white"
                 : "bg-white/5 text-[#555] hover:text-white")
@@ -287,14 +335,16 @@ export default function VideoPlayer({
 
       <div className="flex items-center gap-2">
         <button
+          data-tv-item
           onClick={handleFullscreen}
-          className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-all border border-white/10"
+          className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-all border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)]"
         >
           <Maximize size={12} /> Tela Cheia
         </button>
         <button
+          data-tv-item
           onClick={openExternal}
-          className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-all border border-white/10"
+          className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-all border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)]"
         >
           <ExternalLink size={12} /> Abrir em nova aba
         </button>
