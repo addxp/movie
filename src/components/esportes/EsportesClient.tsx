@@ -148,7 +148,7 @@ export default function EsportesClient({ eventos }: Props) {
                   className="w-full h-full border-0"
                   allowFullScreen
                   allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
                 />
 
                 {/* ✅ Overlay de erro — aparece se o iframe for bloqueado */}
