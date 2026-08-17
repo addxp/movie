@@ -322,7 +322,6 @@ export default function VideoPlayer({
           title={title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
           allowFullScreen
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
           style={{
             position: "absolute",
             inset: 0,
