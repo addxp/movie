@@ -6,6 +6,7 @@ import {
   Search, LogOut, X, Menu, Home, Tv, Sword, Trophy,
   BookOpen, Star, FolderOpen, Radio, ShieldCheck, Film,
   Monitor, UserCircle, Bell, Heart, ChevronRight, Users,
+  Sparkles,
 } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
@@ -13,26 +14,28 @@ import { createClient } from "@/lib/supabase/client";
 interface NavbarProps { user: User; }
 
 const TOP_LINKS = [
-  { href: "/browse",     label: "Início" },
-  { href: "/series",     label: "Séries" },
-  { href: "/animes",     label: "Animes" },
-  { href: "/esportes",   label: "Esportes" },
-  { href: "/live",       label: "Ao Vivo", live: true },
-  { href: "/top",        label: "Top 10" },
-  { href: "/favorites",  label: "Favoritos" },
-  { href: "/room",       label: "Assistir em Grupo" },
+  { href: "/browse",      label: "Início" },
+  { href: "/series",      label: "Séries" },
+  { href: "/animes",      label: "Animes" },
+  { href: "/lancamentos", label: "Lançamentos" },
+  { href: "/esportes",    label: "Esportes" },
+  { href: "/live",        label: "Ao Vivo", live: true },
+  { href: "/top",         label: "Top 10" },
+  { href: "/favorites",   label: "Favoritos" },
+  { href: "/room",        label: "Assistir em Grupo" },
 ];
 
 const NAV_GROUPS = [
   {
     label: "Navegar",
     items: [
-      { href: "/browse",      label: "Início",    Icon: Home },
-      { href: "/movies",      label: "Filmes",    Icon: Film },
-      { href: "/series",      label: "Séries",    Icon: Tv },
-      { href: "/animes",      label: "Animes",    Icon: Sword },
-      { href: "/esportes",    label: "Esportes",  Icon: Trophy },
-      { href: "/live",        label: "Ao Vivo",   Icon: Radio, live: true },
+      { href: "/browse",      label: "Início",      Icon: Home },
+      { href: "/movies",      label: "Filmes",      Icon: Film },
+      { href: "/series",      label: "Séries",      Icon: Tv },
+      { href: "/animes",      label: "Animes",      Icon: Sword },
+      { href: "/lancamentos", label: "Lançamentos", Icon: Sparkles },
+      { href: "/esportes",    label: "Esportes",    Icon: Trophy },
+      { href: "/live",        label: "Ao Vivo",     Icon: Radio, live: true },
     ],
   },
   {
