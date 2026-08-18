@@ -3,6 +3,31 @@ import { useState, useEffect, useRef } from "react";
 import { Play, AlertCircle, Maximize, ExternalLink, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
+type SourceKey =
+  | "vidsrc"
+  | "vidphantom"
+  | "vidnest"
+  | "embed"
+  | "superflix"
+  | "autoembed";
+
+// Fontes de player disponíveis. `noAds` é só um indicativo (baseado no que
+// cada provedor divulga/costuma entregar) — não é uma garantia, provedores
+// gratuitos mudam de comportamento sem aviso.
+const SOURCES: {
+  key: SourceKey;
+  label: string;
+  noAds?: boolean;
+  seriesSupported: boolean;
+}[] = [
+  { key: "vidsrc", label: "VidSrc", noAds: true, seriesSupported: true },
+  { key: "vidphantom", label: "VidPhantom", noAds: true, seriesSupported: true },
+  { key: "vidnest", label: "VidNest", noAds: true, seriesSupported: false },
+  { key: "embed", label: "EmbedPlay", seriesSupported: true },
+  { key: "superflix", label: "SuperFlix", seriesSupported: true },
+  { key: "autoembed", label: "AutoEmbed", seriesSupported: false },
+];
+
 interface VideoPlayerProps {
   videoUrl: string;
   title: string;
@@ -23,7 +48,7 @@ export default function VideoPlayer({
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const [source, setSource] = useState<"embed" | "superflix">("embed");
+  const [source, setSource] = useState<SourceKey>("vidsrc");
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
@@ -106,14 +131,31 @@ export default function VideoPlayer({
   const getSrc = () => {
     if (embedSrc) return embedSrc;
 
-    if (isEmbedPlay(videoUrl) || tmdbId) {
-      if (source === "superflix" && tmdbId) {
-        if (isSerieUrl(videoUrl)) {
-          return `https://superflixapi.pro/serie/${tmdbId}`;
-        }
-        return `https://superflixapi.pro/filme/${tmdbId}`;
+    const serie = isSerieUrl(videoUrl);
+
+    if (tmdbId) {
+      switch (source) {
+        case "vidsrc":
+          return serie
+            ? `https://vidsrc.wiki/embed/tv/${tmdbId}/1/1`
+            : `https://vidsrc.wiki/embed/movie/${tmdbId}`;
+        case "vidphantom":
+          return serie
+            ? `https://vidphantom.com/tv/${tmdbId}/1/1`
+            : `https://vidphantom.com/movie/${tmdbId}`;
+        case "vidnest":
+          // VidNest só divulgou o padrão de filme; séries caem no fallback abaixo.
+          return serie ? videoUrl : `https://vidnest.fun/movie/${tmdbId}`;
+        case "autoembed":
+          // AutoEmbed só divulgou o padrão de filme; séries caem no fallback abaixo.
+          return serie ? videoUrl : `https://player.autoembed.app/embed/movie/${tmdbId}`;
+        case "superflix":
+          return serie
+            ? `https://superflixapi.pro/serie/${tmdbId}`
+            : `https://superflixapi.pro/filme/${tmdbId}`;
+        default:
+          break;
       }
-      return videoUrl;
     }
 
     return videoUrl;
@@ -277,37 +319,31 @@ export default function VideoPlayer({
   }
 
   const currentSrc = getSrc();
-  const hasSuperflix = (isEmbedPlay(videoUrl) || !!tmdbId) && !embedSrc;
+  const hasAlternateSources = (isEmbedPlay(videoUrl) || !!tmdbId) && !embedSrc;
+  const serie = isSerieUrl(videoUrl);
+  const availableSources = SOURCES.filter((s) => serie ? s.seriesSupported : true);
 
   return (
     <div className="space-y-3">
-      {hasSuperflix && (
-        <div className="flex items-center gap-2">
+      {hasAlternateSources && (
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[#555] text-xs">Fonte:</span>
-          <button
-            data-tv-item
-            onClick={() => setSource("embed")}
-            className={
-              "px-3 py-1 rounded text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)] " +
-              (source === "embed"
-                ? "bg-[var(--color-red)] text-white"
-                : "bg-white/5 text-[#555] hover:text-white")
-            }
-          >
-            EmbedPlay
-          </button>
-          <button
-            data-tv-item
-            onClick={() => setSource("superflix")}
-            className={
-              "px-3 py-1 rounded text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)] " +
-              (source === "superflix"
-                ? "bg-[var(--color-red)] text-white"
-                : "bg-white/5 text-[#555] hover:text-white")
-            }
-          >
-            SuperFlix
-          </button>
+          {availableSources.map((s) => (
+            <button
+              key={s.key}
+              data-tv-item
+              onClick={() => setSource(s.key)}
+              className={
+                "px-3 py-1 rounded text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)] " +
+                (source === s.key
+                  ? "bg-[var(--color-red)] text-white"
+                  : "bg-white/5 text-[#555] hover:text-white")
+              }
+            >
+              {s.label}
+              {s.noAds && <span className="ml-1 opacity-70">· sem anúncios</span>}
+            </button>
+          ))}
         </div>
       )}
 
@@ -348,9 +384,9 @@ export default function VideoPlayer({
         >
           <ExternalLink size={12} /> Abrir em nova aba
         </button>
-        {hasSuperflix && (
+        {hasAlternateSources && (
           <span className="text-[#555] text-xs ml-auto">
-            Se um player não funcionar, tente o outro
+            Se um player não funcionar, tente outro
           </span>
         )}
       </div>
