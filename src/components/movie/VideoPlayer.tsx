@@ -9,7 +9,8 @@ type SourceKey =
   | "vidnest"
   | "embed"
   | "superflix"
-  | "autoembed";
+  | "autoembed"
+  | "megaembed";
 
 // Fontes de player disponíveis. `noAds` é só um indicativo (baseado no que
 // cada provedor divulga/costuma entregar) — não é uma garantia, provedores
@@ -26,6 +27,7 @@ const SOURCES: {
   { key: "embed", label: "EmbedPlay", seriesSupported: true },
   { key: "superflix", label: "SuperFlix", seriesSupported: true },
   { key: "autoembed", label: "AutoEmbed", seriesSupported: false },
+  { key: "megaembed", label: "MegaEmbed", seriesSupported: true },
 ];
 
 interface VideoPlayerProps {
@@ -153,6 +155,10 @@ export default function VideoPlayer({
           return serie
             ? `https://superflixapi.pro/serie/${tmdbId}`
             : `https://superflixapi.pro/filme/${tmdbId}`;
+          case "superflix":
+          return serie
+            ? `https://superflixapi.pro/serie/${tmdbId}`
+            : `;
         default:
           break;
       }
