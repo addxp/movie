@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type SourceKey =
   | "vidsrc"
-  | "vidphantom"
+  | "vidsrc.sbs"
   | "vidnest"
   | "embed"
   | "superflix"
@@ -21,7 +21,7 @@ const SOURCES: {
   seriesSupported: boolean;
 }[] = [
   { key: "vidsrc", label: "VidSrc", noAds: true, seriesSupported: true },
-  { key: "vidphantom", label: "VidPhantom", noAds: true, seriesSupported: true },
+  { key: "vidsrc.sbs", label: "VidSrc.sbs", noAds: true, seriesSupported: true },
   { key: "vidnest", label: "VidNest", noAds: true, seriesSupported: false },
   { key: "embed", label: "EmbedPlay", seriesSupported: true },
   { key: "superflix", label: "SuperFlix", seriesSupported: true },
@@ -141,8 +141,8 @@ export default function VideoPlayer({
             : `https://vidsrc.wiki/embed/movie/${tmdbId}`;
         case "vidphantom":
           return serie
-            ? `https://vidphantom.com/tv/${tmdbId}/1/1`
-            : `https://vidphantom.com/movie/${tmdbId}`;
+            ? `https://vidsrc.sbs/embed/tv/${tmdbId}/1/1`
+            : `https://vidsrc.sbs/embed/movie/${tmdbId}`;
         case "vidnest":
           // VidNest só divulgou o padrão de filme; séries caem no fallback abaixo.
           return serie ? videoUrl : `https://vidnest.fun/movie/${tmdbId}`;
