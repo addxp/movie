@@ -155,7 +155,7 @@ export default function VideoPlayer({
           return serie
             ? `https://superflixapi.pro/serie/${tmdbId}`
             : `https://superflixapi.pro/filme/${tmdbId}`;
-          case "superflix":
+          case "megaembed":
           return serie
             ? `https://megaembed.com/embed/tv/${tmdbId}/1/1`
             : `https://megaembed.com/embed/movie/${tmdbId}`;
