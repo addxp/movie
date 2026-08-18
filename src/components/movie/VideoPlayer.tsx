@@ -139,7 +139,7 @@ export default function VideoPlayer({
           return serie
             ? `https://vidsrc.wiki/embed/tv/${tmdbId}/1/1`
             : `https://vidsrc.wiki/embed/movie/${tmdbId}`;
-        case "vidphantom":
+        case "vidsrc.sbs":
           return serie
             ? `https://vidsrc.sbs/embed/tv/${tmdbId}/1/1`
             : `https://vidsrc.sbs/embed/movie/${tmdbId}`;
