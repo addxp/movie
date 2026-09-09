@@ -157,3 +157,48 @@ export function groupEpisodesBySeason(episodes: Episode[]): Record<number, Episo
     return acc;
   }, {} as Record<number, Episode[]>);
 }
+export async function getRecommendedMovies(movie: Movie): Promise<Movie[]> {
+  const supabase = await createClient();
+
+  // 1) Mesma produtora/franquia (campo collection) — prioridade máxima
+  if (movie.collection) {
+    const { data } = await supabase
+      .from("movies")
+      .select("*")
+      .eq("collection", movie.collection)
+      .neq("id", movie.id)
+      .or("type.eq.movie,type.is.null")
+      .order("release_year", { ascending: true })
+      .limit(12);
+    if (data && data.length > 0) return data;
+  }
+
+  // 2) Fallback: mesma categoria, ordenado por nota
+  const { data: sameCategory } = await supabase
+    .from("movies")
+    .select("*")
+    .eq("category", movie.category)
+    .neq("id", movie.id)
+    .or("type.eq.movie,type.is.null")
+    .order("rating", { ascending: false })
+    .limit(12);
+
+  return sameCategory || [];
+}
+
+export async function getEpisodeRecommendations(
+  movieId: string,
+  currentEpisodeId: string
+): Promise<{ next: Episode | null; others: Episode[] }> {
+  const episodes = await getEpisodesBySeries(movieId);
+  if (episodes.length === 0) return { next: null, others: [] };
+
+  const idx = episodes.findIndex((e) => e.id === currentEpisodeId);
+  const next = idx >= 0 && idx + 1 < episodes.length ? episodes[idx + 1] : null;
+
+  const others = episodes.filter(
+    (e) => e.id !== currentEpisodeId && e.id !== next?.id
+  );
+
+  return { next, others: others.slice(0, 12) };
+}

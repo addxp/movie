@@ -2,11 +2,12 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Clock, Star, Tv } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getMovieById, getEpisodesBySeries, groupEpisodesBySeason } from "@/lib/movies";
+import { getMovieById, getEpisodesBySeries, groupEpisodesBySeason, getRecommendedMovies } from "@/lib/movies";
 import VideoPlayer from "@/components/movie/VideoPlayer";
 import FavoriteButton from "@/components/movie/FavoriteButton";
 import CreateWatchPartyButton from "@/components/watchparty/CreateWatchPartyButton";
 import CommentSection from "@/components/movie/CommentSection";
+import RecommendedRow from "@/components/movie/RecommendedRow";
 import Navbar from "@/components/layout/Navbar";
 
 interface Props { params: Promise<{ id: string }>; }
@@ -23,6 +24,8 @@ export default async function MoviePage({ params }: Props) {
   const isSeries = movie.type === "series";
   const episodes = isSeries ? await getEpisodesBySeries(id) : [];
   const seasons  = isSeries ? groupEpisodesBySeason(episodes) : {};
+  const recommended = !isSeries ? await getRecommendedMovies(movie) : [];
+  const recommendedTitle = movie.collection ? `Mais de ${movie.collection}` : "Você também pode gostar";
 
   // Busca comentários com perfil
   const { data: comments } = await supabase
@@ -234,6 +237,10 @@ export default async function MoviePage({ params }: Props) {
                 )
               )}
             </div>
+
+            {!isSeries && (
+              <RecommendedRow title={recommendedTitle} movies={recommended} userId={user.id} />
+            )}
 
             {/* ── Comentários e Avaliação ── */}
             <CommentSection
