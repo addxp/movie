@@ -2,7 +2,9 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getEpisodeRecommendations } from "@/lib/movies";
 import VideoPlayer from "@/components/movie/VideoPlayer";
+import EpisodeRecommendations from "@/components/movie/EpisodeRecommendations";
 import Navbar from "@/components/layout/Navbar";
 
 interface Props { params: Promise<{ id: string }>; }
@@ -22,6 +24,7 @@ export default async function WatchEpisodePage({ params }: Props) {
   if (!episode) notFound();
 
   const movie = episode.movies as { id: string; title: string };
+  const { next, others } = await getEpisodeRecommendations(movie.id, episode.id);
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
@@ -45,6 +48,7 @@ export default async function WatchEpisodePage({ params }: Props) {
           userId={user.id}
           duration={episode.duration}
         />
+        <EpisodeRecommendations seriesTitle={movie.title} next={next} others={others} />
       </div>
     </div>
   );
