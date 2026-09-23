@@ -1,16 +1,3 @@
-# StreamVault — Redesign Cineverse
-
-## Arquivos alterados
-
-| Arquivo redesign                               | Substituir em                                                  |
-|------------------------------------------------|----------------------------------------------------------------|
-| `src/app/globals.css`                          | `streamvault/src/app/globals.css`                              |
-| `src/components/layout/Navbar.tsx`             | `streamvault/src/components/layout/Navbar.tsx`                 |
-| `src/components/movie/HeroBanner.tsx`          | `streamvault/src/components/movie/HeroBanner.tsx`              |
-| `src/components/movie/MovieCard.tsx`           | `streamvault/src/components/movie/MovieCard.tsx`               |
-| `src/components/movie/MovieRow.tsx`            | `streamvault/src/components/movie/MovieRow.tsx`                |
-| `src/components/movie/BrowseClient.tsx`        | `streamvault/src/components/movie/BrowseClient.tsx`            |
-| `src/components/movie/TrendingRow.tsx`         | **NOVO** — adicionar em `streamvault/src/components/movie/`    |
 
 ## O que mudou no design
 
