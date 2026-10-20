@@ -1,11 +1,14 @@
 "use client";
 import { useState } from "react";
 import { X } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export default function AnnouncementBanner() {
   const [visible, setVisible] = useState(true);
+  const pathname = usePathname();
 
-  if (!visible) return null;
+  // Na TV o banner (fixo, z-200, com blur) cobria a barra de busca e o controle não conseguia fechá-lo
+  if (!visible || pathname?.startsWith("/tv")) return null;
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[200] bg-yellow-500/10 border-b border-yellow-500/20 backdrop-blur-sm">
