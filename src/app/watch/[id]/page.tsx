@@ -6,6 +6,8 @@ import { getEpisodeRecommendations } from "@/lib/movies";
 import VideoPlayer from "@/components/movie/VideoPlayer";
 import EpisodeRecommendations from "@/components/movie/EpisodeRecommendations";
 import Navbar from "@/components/layout/Navbar";
+import TVSpatialNav from "@/components/tv/TVSpatialNav";
+import EpisodeMemory from "@/components/tv/EpisodeMemory";
 
 interface Props { params: Promise<{ id: string }>; }
 
@@ -29,6 +31,8 @@ export default async function WatchEpisodePage({ params }: Props) {
   return (
     <div className="min-h-screen bg-[var(--color-bg)]">
       <Navbar user={user} />
+      <TVSpatialNav />
+      <EpisodeMemory movieId={movie.id} episodeId={episode.id} />
       <div className="pt-24 max-w-5xl mx-auto px-6 pb-12">
         <Link href={`/movie/${movie.id}`} className="inline-flex items-center gap-2 text-[var(--color-muted)] hover:text-white transition-colors mb-6 text-sm">
           <ArrowLeft size={16} /> Voltar para {movie.title}
@@ -47,6 +51,8 @@ export default async function WatchEpisodePage({ params }: Props) {
           movieId={movie.id}
           userId={user.id}
           duration={episode.duration}
+          season={episode.season}
+          episode={episode.episode}
         />
         <EpisodeRecommendations seriesTitle={movie.title} next={next} others={others} />
       </div>

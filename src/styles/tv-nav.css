@@ -1,0 +1,32 @@
+/* Ajustes das páginas comuns (filme, série, player) quando o site está em modo TV.
+   Só vale com <html class="tv-nav">, ligado por TVSpatialNav. */
+
+html.tv-nav { scroll-behavior: auto !important; }
+html.tv-nav body::before,
+html.tv-nav body::after { display: none !important; }       /* vinheta + grade fullscreen */
+html.tv-nav .sv-announcement { display: none !important; }  /* aviso fixo que cobre o topo */
+html.tv-nav * {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Foco bem visível de longe: anel branco + anel vermelho (não depende de :focus-visible) */
+html.tv-nav a:focus,
+html.tv-nav button:focus,
+html.tv-nav input:focus,
+html.tv-nav select:focus,
+html.tv-nav textarea:focus,
+html.tv-nav [tabindex]:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 4px #fff, 0 0 0 8px #e50914 !important;
+  position: relative;
+  z-index: 5;
+}
+
+/* Botões do player eram text-xs; na TV precisam ser grandes */
+html.tv-nav .tv-player-btn {
+  font-size: 18px !important;
+  padding: 14px 24px !important;
+  border-radius: 10px !important;
+}
+html.tv-nav [data-ep-id] { min-height: 84px; }

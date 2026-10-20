@@ -37,6 +37,9 @@ interface VideoPlayerProps {
   movieId: string;
   userId: string;
   duration?: number;
+  /** Quando é um episódio: usados para montar o embed do episódio certo (antes era sempre 1/1). */
+  season?: number;
+  episode?: number;
 }
 
 export default function VideoPlayer({
@@ -46,6 +49,8 @@ export default function VideoPlayer({
   movieId,
   userId,
   duration,
+  season,
+  episode,
 }: VideoPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -127,23 +132,35 @@ export default function VideoPlayer({
   const isSerieUrl = (url: string) =>
     url.includes("/serie/") || url.includes("/tv/");
 
+  // Reproduzindo um episódio (a página /watch passa season/episode) ou URL de série
+  const hasEpisodeInfo = season != null && episode != null;
+  const isSeriesPlayback = (url: string) => hasEpisodeInfo || isSerieUrl(url);
+
+  // Temporada/episódio: props > números na URL (.../embed/ID/2/5) > 1/1
+  const getSeasonEpisode = (url: string): [number, number] => {
+    if (season != null && episode != null) return [season, episode];
+    const m = url.match(/(?:embed|serie|tv)\/[^/?]+\/(\d+)\/(\d+)/);
+    return m ? [Number(m[1]), Number(m[2])] : [1, 1];
+  };
+
   const embedSrc = getYouTubeEmbed(videoUrl) || getVimeoEmbed(videoUrl);
   const tmdbId = getTmdbId(videoUrl);
 
   const getSrc = () => {
     if (embedSrc) return embedSrc;
 
-    const serie = isSerieUrl(videoUrl);
+    const serie = isSeriesPlayback(videoUrl);
+    const [s, ep] = getSeasonEpisode(videoUrl);
 
     if (tmdbId) {
       switch (source) {
         case "vidsrc":
           return serie
-            ? `https://vidsrc.wiki/embed/tv/${tmdbId}/1/1`
+            ? `https://vidsrc.wiki/embed/tv/${tmdbId}/${s}/${ep}`
             : `https://vidsrc.wiki/embed/movie/${tmdbId}`;
         case "vidsrc.sbs":
           return serie
-            ? `https://vidsrc.sbs/embed/tv/${tmdbId}/1/1`
+            ? `https://vidsrc.sbs/embed/tv/${tmdbId}/${s}/${ep}`
             : `https://vidsrc.sbs/embed/movie/${tmdbId}`;
         case "vidnest":
           // VidNest só divulgou o padrão de filme; séries caem no fallback abaixo.
@@ -153,11 +170,11 @@ export default function VideoPlayer({
           return serie ? videoUrl : `https://player.autoembed.app/embed/movie/${tmdbId}`;
         case "superflix":
           return serie
-            ? `https://superflixapi.pro/serie/${tmdbId}`
+            ? (hasEpisodeInfo ? `https://superflixapi.pro/serie/${tmdbId}/${s}/${ep}` : `https://superflixapi.pro/serie/${tmdbId}`)
             : `https://superflixapi.pro/filme/${tmdbId}`;
           case "megaembed":
           return serie
-            ? `https://megaembed.com/embed/tv/${tmdbId}/1/1`
+            ? `https://megaembed.com/embed/tv/${tmdbId}/${s}/${ep}`
             : `https://megaembed.com/embed/movie/${tmdbId}`;
         default:
           break;
@@ -326,7 +343,7 @@ export default function VideoPlayer({
 
   const currentSrc = getSrc();
   const hasAlternateSources = (isEmbedPlay(videoUrl) || !!tmdbId) && !embedSrc;
-  const serie = isSerieUrl(videoUrl);
+  const serie = isSeriesPlayback(videoUrl);
   const availableSources = SOURCES.filter((s) => serie ? s.seriesSupported : true);
 
   return (
@@ -340,7 +357,7 @@ export default function VideoPlayer({
               data-tv-item
               onClick={() => setSource(s.key)}
               className={
-                "px-3 py-1 rounded text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)] " +
+                "tv-player-btn px-3 py-1 rounded text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)] " +
                 (source === s.key
                   ? "bg-[var(--color-red)] text-white"
                   : "bg-white/5 text-[#555] hover:text-white")
@@ -364,6 +381,15 @@ export default function VideoPlayer({
           title={title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
           allowFullScreen
+          onLoad={() => {
+            // Na TV: o controle precisa mandar as teclas para o player; tenta tela cheia e foca o iframe
+            if (!document.documentElement.classList.contains("tv-nav")) return;
+            const box = containerRef.current;
+            if (box && box.requestFullscreen && !document.fullscreenElement) {
+              box.requestFullscreen().catch(() => {});
+            }
+            containerRef.current?.querySelector("iframe")?.focus();
+          }}
           style={{
             position: "absolute",
             inset: 0,
@@ -379,14 +405,14 @@ export default function VideoPlayer({
         <button
           data-tv-item
           onClick={handleFullscreen}
-          className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-all border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)]"
+          className="tv-player-btn flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-all border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)]"
         >
           <Maximize size={12} /> Tela Cheia
         </button>
         <button
           data-tv-item
           onClick={openExternal}
-          className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-all border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)]"
+          className="tv-player-btn flex items-center gap-1.5 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-all border border-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-red)]"
         >
           <ExternalLink size={12} /> Abrir em nova aba
         </button>

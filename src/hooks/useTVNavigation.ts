@@ -38,10 +38,10 @@ const REPEAT_MS = 85;   // intervalo mínimo entre movimentos com tecla segurada
 const SCROLL_MS = 130;  // duração do scroll vertical entre linhas
 const ROW_ANCHOR = 0.2; // linha focada fica a 20% do topo da tela
 
-type Action = "left" | "right" | "up" | "down" | "enter" | "back";
+export type Action = "left" | "right" | "up" | "down" | "enter" | "back";
 
 // e.key + keyCode: muitos navegadores de TV (Tizen, webOS, Fire TV) não mandam e.key confiável
-function readAction(e: KeyboardEvent): Action | null {
+export function readAction(e: KeyboardEvent): Action | null {
   const k = e.key;
   const c = e.keyCode;
   if (k === "ArrowLeft" || c === 37) return "left";
@@ -56,7 +56,7 @@ function readAction(e: KeyboardEvent): Action | null {
   return null;
 }
 
-function isTyping(el: Element | null): boolean {
+export function isTyping(el: Element | null): boolean {
   if (!el) return false;
   const tag = el.tagName;
   if (tag === "TEXTAREA" || tag === "SELECT") return true;

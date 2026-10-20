@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useTVNavigation } from "@/hooks/useTVNavigation";
 import { tvBackdrop } from "@/lib/tv-image";
+import { markTVSession } from "@/lib/tv-mode";
 import type { TVMovie, TVFeatured } from "@/lib/tv-movies";
 import TVMovieCard from "@/components/tv/TVMovieCard";
 
@@ -79,6 +80,7 @@ export default function TVPageClient({ user, featured, moviesByCategory }: TVPag
 
   // Liga/desliga os ajustes de CSS do modo TV só enquanto esta página está aberta
   useEffect(() => {
+    markTVSession(); // páginas de filme/série/player passam a usar navegação por controle
     document.documentElement.classList.add("tv-mode");
     document.body.classList.add("tv-mode");
     return () => {

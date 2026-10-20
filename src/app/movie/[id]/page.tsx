@@ -9,6 +9,8 @@ import CreateWatchPartyButton from "@/components/watchparty/CreateWatchPartyButt
 import CommentSection from "@/components/movie/CommentSection";
 import RecommendedRow from "@/components/movie/RecommendedRow";
 import Navbar from "@/components/layout/Navbar";
+import TVSpatialNav from "@/components/tv/TVSpatialNav";
+import SeriesTVFocus from "@/components/tv/SeriesTVFocus";
 
 interface Props { params: Promise<{ id: string }>; }
 
@@ -58,6 +60,8 @@ export default async function MoviePage({ params }: Props) {
   return (
     <div className="zone-vault min-h-screen bg-[var(--bg)]">
       <Navbar user={user} />
+      <TVSpatialNav />
+      {isSeries && <SeriesTVFocus movieId={movie.id} />}
 
       {/* Background com blur */}
       <div className="fixed inset-0 z-0 pointer-events-none">
@@ -109,12 +113,12 @@ export default async function MoviePage({ params }: Props) {
             <p className="text-white/75 text-base leading-relaxed mb-8 max-w-2xl">{movie.description}</p>
             <div className="flex items-center gap-3 mb-10">
               {!isSeries && (
-                <a href="#player" className="flex items-center gap-2 bg-white text-black font-bold px-8 py-3 rounded-lg hover:bg-white/90 transition-all">
+                <a href="#player" data-tv-primary="" className="flex items-center gap-2 bg-white text-black font-bold px-8 py-3 rounded-lg hover:bg-white/90 transition-all">
                   ▶ Assistir Agora
                 </a>
               )}
               {isSeries && episodes.length > 0 && (
-                <Link href={`/watch/${episodes[0].id}`} className="flex items-center gap-2 bg-white text-black font-bold px-8 py-3 rounded-lg hover:bg-white/90 transition-all">
+                <Link href={`/watch/${episodes[0].id}`} data-tv-primary="" className="flex items-center gap-2 bg-white text-black font-bold px-8 py-3 rounded-lg hover:bg-white/90 transition-all">
                   ▶ Assistir T1E1
                 </Link>
               )}
@@ -190,6 +194,7 @@ export default async function MoviePage({ params }: Props) {
                           {eps.map((ep) => (
                             <Link
                               key={ep.id}
+                              data-ep-id={ep.id}
                               href={`/watch/${ep.id}`}
                               className="flex items-center gap-3 bg-white/5 rounded-lg p-3 hover:bg-white/10 transition-colors group"
                             >

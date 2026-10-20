@@ -11,7 +11,7 @@ export default function AnnouncementBanner() {
   if (!visible || pathname?.startsWith("/tv")) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[200] bg-yellow-500/10 border-b border-yellow-500/20 backdrop-blur-sm">
+    <div className="sv-announcement fixed top-0 left-0 right-0 z-[200] bg-yellow-500/10 border-b border-yellow-500/20 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-4">
         <p className="text-yellow-400/90 text-xs text-center flex-1">
           ⚠️ Peço desculpas pelo site apresentar anúncios no player. Use o navegador{" "}
